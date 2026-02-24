@@ -1,0 +1,25 @@
+project:
+  type: book
+
+book:
+  title: "Den långa bluffen"
+  author: "Christian Lindell & Alex Voronov"
+  date: "2026-02-23"
+  chapters:
+    - index.qmd
+    - sysselsattning.qmd
+    - sammanfattning.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+
+
