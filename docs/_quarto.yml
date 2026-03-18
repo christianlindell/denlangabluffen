@@ -7,14 +7,7 @@ book:
   date: "2026-02-23"
   chapters:
     - index.qmd
-    - jobbluffen.qmd
-    - attflyttamalstolpar.qmd
-    - krisibefolkningfragan.qmd
-    - debespottade.qmd
-    - mytenom2015.qmd
-    - sveketmotukrainarna.qmd
-    - femskottifoten.qmd
-    - sammanfattning.qmd
+    - vad_ar_sysselsattning.qmd
     - references.qmd
 
 bibliography: references.bib

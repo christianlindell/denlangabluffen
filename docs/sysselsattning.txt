@@ -1,0 +1,44 @@
+Väldigt många okunniga kommentarer om vad "sysselsättning" är just nu. Vi tar det från början: sysselsättning = förvärvsarbete. För att vara sysselsatt måste man få lön från en arbetsgivare eller arbeta i eget eller anhörigs företag.
+
+Bidragsjobb då? Jo, de insatser från Af som sker i form av lönesubvention till arbetsgivare gör att man räknas som "sysselsatt". Det är en mindre del av Af:s insatser som berör ca 100 000 personer. 60% får stöd pga nedsatt arbetsförmåga. Stöden höjer sysselsättningsgraden med ca 1,6 procentenheter.
+
+Antalet personer som är sysselsatta via stöd från Af är kraftigt minskande. Det är inte heller så att det är en höger-vänster-fråga vilka regeringar som satsar på subventionerade tjänster:
+
+Det faktum att man måste få lön från en arbetsgivare (eller arbeta i eget eller anhörigs företag) innebär att en del vanliga påståenden är felaktiga. Om man läser SFI är man till exempel inte "sysselsatt" eftersom det inte finns någon arbetsgivare.
+
+Man läser ibland påståenden om att regeringen ändrar definitioner och manipulerar statistiken. Det stämmer inte heller. Definitionerna inom arbetsmarknadsstatistiken regleras i en ILO-resolution som alla länder följer. Senaste upplagan är från 2013:
+
+https://www.ilo.org/global/statistics-and-databases/standards-and-guidelines/resolutions-adopted-by-international-conferences-of-labour-statisticians/WCMS_230304/lang--en/index.htm
+
+I den kan man se att 1-timmesgränsen är en internationell standard och man kan se att de som får bidrag (inte lön!) från arbetsförmedlingen inte räknas som "sysselsatta".
+
+En sak som stör mig är att SCB valt att tala om "sysselsatta" och inte "förvärvsarbetande". Det hade minskat förvirringen runt sysselsättningsbegreppet som inte har samma betydelse i vardagsspråket som det har som statistiskt begrepp. På engelska heter det "employment".
+
+Man läser ibland att regeringen har hittat på "sysselsättning" som om det vore ett nytt begrepp. Det är naturligtvis inte sant. SCB har mätt "sysselsättning" med ungefär samma definition i alla fall i 50 år. Det finns tidsserier sedan 1970 i SCB:s öppna databas.
+
+Och tänk lite innan ni vidarebefordrar konstiga påstående. Om något låter för dumt för att vara sant så är det oftast inte det.
+
+En typiskt sådan sak är alla tweets om entimmesgränsen. Tänk efter själva: Är det rimligt att den skull ha någon avgörande betydelse? Hur många känner ni som jobbar 1 timme i veckan. Är det rimligt att en arbetsgivare skulle lägga ner handläggningstid för att få bidrag för det?
+
+Folk har efterlyst källor:
+Definition av sysselsättning: https://www.scb.se/contentassets/8ab23deb3310477a9dad083750ec0355/begrepp-och-definitioner-aku-2021-02-22.pdf
+ 
+Få sysselsatta arbetar få timmar: https://scb.se/hitta-statistik/artiklar/2017/Vanligast-att-unga-och-aldre-jobbar-fa-timmar/
+
+Ingen skillnad i jobbade timmar mellan sysselsatta inrikesfödda och flyktingar: https://www.scb.se/hitta-statistik/artiklar/2019/genomsnittlig-arbetstid-densamma-for-flyktingar-som-for-inrikes-fodda/
+
+Väldigt få har en överenskommen arbetstid på under 20 h / vecka: Till exempel Tab2 i någon av tabellerna som heter "grundtabeller_månad_år.xlsx":
+
+https://www.scb.se/hitta-statistik/statistik-efter-amne/arbetsmarknad/arbetskraftsundersokningar/arbetskraftsundersokningarna-aku/pong/tabell-och-diagram/icke-sasongrensade-data/grundtabeller-aku-1574-ar-manad/
+
+Sysselsatta i arbetsmarknadspolitiska åtgärder som innebär lönesubvention till arbetsgivare. se tabellen som heter "Arbetssökande 1996–årtal-månad": https://arbetsformedlingen.se/statistik/sok-statistik/tidigare-statistik
+
+
+Allmän statistik om Arbetskraftsundersökningarna hittar man på http://scb.se/aku .
+
+Jämförelser med andra EU-länder hittar man på Eurostat: https://ec.europa.eu/eurostat/data/database Leta under:
+
+Löpande månadsstatistik från Af hittar man här: https://arbetsformedlingen.se/statistik/sok-statistik
+
+
+
