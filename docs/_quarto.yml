@@ -8,6 +8,7 @@ book:
   chapters:
     - index.qmd
     - vad_ar_sysselsattning.qmd
+    - flyktingar_vt.qmd
     - references.qmd
 
 bibliography: references.bib
