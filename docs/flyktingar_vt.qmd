@@ -8,3 +8,9 @@ Runt 2010 skedde ett skifte i hur många år det tar för flyktingar och anhöri
 Diagrammet nedan visar tid in till arbete efter vilket år flyktingarna blivit kommunplacerade. De som kommunplacerarades mellan åren 2000-2024 tog det nio år innan hälften var sysselsatta. För de som kommunplacerades 2020 tog det mindre än tre år.
 
 ![](bilder/flyktingar_vt\flyktingar_sysgrad_vistelsetid_Riket.png){fig-alt="Linjediagram som visar att flyktingar blir sysselsatta allt snabbre"}
+
+Källa:
+
+[Andel sysselsatta kommunmottagna flyktingar och anhöriga efter län, kön, mottagningsår och sysselsättningsår 2022 - 2023](https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003B/MotFlyktLanBAS/)
+
+[Antal sysselsatta kommunmottagna flyktingar och anhöriga efter antal år efter mottagning, kön och mottagningsår 1997 - 2024](https://www.statistikdatabasen.scb.se/pxweb/sv/ssd/START__AA__AA0003__AA0003B/KomMotForvBAS/)
