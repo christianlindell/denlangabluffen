@@ -1,0 +1,7 @@
+---
+title: "Rättelser"
+---
+
+Trots att vi har försökt att vara noggranna så kan det finnas fel i boken. Här samlar vi de fel som vi har hittat. Här har vi samlat rättelser (eller *errata* som det heter i finare sammanhang).
+
+Beräkningen av fördelningen av inbetalning av moms på ålder och kön blev fel. Vi hade fördelat momsen baserat på inkomster för män och kvinnor i olika åldersgrupper, men det blev ett räknefel som vi borde upptäckt.

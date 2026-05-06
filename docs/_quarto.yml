@@ -10,8 +10,13 @@ book:
     - vad_ar_sysselsattning.qmd
     - flyktingar_vt.qmd
     - utsatta_omraden_regso.qmd
-    - yrken_gfb
+    - yrken_gfb.qmd
+    - medianalder.qmd
+    - fland_sysgrad.qmd
+    - sys_eu_heltid_deltid.qmd
+    - errata.qmd
     - references.qmd
+
 
 bibliography: references.bib
 
