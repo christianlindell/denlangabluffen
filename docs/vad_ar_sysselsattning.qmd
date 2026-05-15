@@ -1,6 +1,5 @@
 ---
 title: '"Sysselsättning" är samma sak som "förvärvsarbete"'
-date: "2026-03-18"
 ---
 
 Det cirkulerar väldigt många okunniga kommentarer om vad "sysselsättning" är i arbetsmarknadsstatistiken. Vi tar det från början: *sysselsättning = förvärvsarbete*. För att vara sysselsatt måste man få *lön* *från en arbetsgivare* eller *arbeta i eget eller anhörigs företag*. Det är den definition som SCB använder i den officiella sysselsättningsstatistiken som kommer från Arbetskraftsundersökningarna (AKU).

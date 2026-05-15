@@ -16,18 +16,17 @@ book:
     - sys_eu_heltid_deltid.qmd
     - utrikesfodda_och_bidragsforsorjda.qmd
     - errata.qmd
-    - references.qmd
+  
 
-
-bibliography: references.bib
 
 format:
   html:
     theme:
       - cosmo
       - brand
-  pdf:
-    documentclass: scrreprt
+    embed-resources: false
+
+
 
 
 
