@@ -1,5 +1,7 @@
 # Förord från boken "Den långa bluffen - Myterna om Sverige, arbete och invandring" {.unnumbered}
 
+[![](bilder/Den-langa-bluffen-Framsida-300x439.jpg){fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)
+
 En lång bluff i poker är en bluffstrategi där en spelare har en svag hand men spelar på ett sätt som får motspelarna att tro motsatsen. De felaktiga föreställningarna byggs upp under lång tid, över flera satsningsomgångar.
 
 En bluff kan även vara lång i betydelsen långlivad. Den kan ha formen av en villfarelse som håller sig länge i det allmänna medvetandet.
@@ -23,3 +25,5 @@ Vi tar itu med hittepåbegrepp som självförsörjning och integrationsskuld. Vi
 Det gör vi genom statistik som oftast finns tillgänglig för var och en, men som sällan lyfts fram i diskussionen eller sammanställs till en helhet.
 
 Vi hoppas att det här kan vara en handbok för den som vill argumentera mot skrämselpropagandan och behöver pålitliga siffror, källor, relevanta infallsvinklar och förklaringar.
+
+*Alex Voronov och Christian Lindell, maj 2026*
