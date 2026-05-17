@@ -6,4 +6,4 @@ Många kvinnor i EU-länderna arbetar deltid, vilket kan bero på olika faktorer
 
 Ett intressant undantag är att många av länderna i det forna östblocket, som Polen, Tjeckien och Slovakien, har en hög andel kvinnor som arbetar heltid. Detta kan bero på historiska och kulturella faktorer, där det under kommunisttiden var vanligt att både män och kvinnor deltog i arbetslivet, därtill kommer att det finns ekonomiska faktorer som gör att kvinnor i dessa länder behöver arbeta heltid för att försörja sig själva och sina familjer.
 
-![](bilder/heltid_deltid_kon_eu\sys_deltid_kon_eu.jpg){width="755"}
+![](bilder/heltid_deltid_kon_eu/sys_deltid_kon_eu.jpg){width="755"}

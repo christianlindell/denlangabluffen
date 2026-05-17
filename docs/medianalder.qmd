@@ -6,4 +6,4 @@ Sverige tillhör de länder som har lägst medianålder i Europa och har, tillsa
 
 Italien sticker ut som ett av länderna med högst medelålder. Italien har dessutom svårt att sysselsätta den förhållandevis lilla andelen av befolkningen som är i arbetsför ålder och tillhör bottenligan vad gäller sysselsättningsgrad.
 
-![](bilder/demografi_eu\medianalder_EU.jpg){width="655"}
+![](bilder/demografi_eu/medianalder_EU.jpg){width="655"}

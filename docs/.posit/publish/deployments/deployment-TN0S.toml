@@ -11,15 +11,43 @@ id = '019e2c85-188e-68fb-4dca-bf4169fe7d97'
 dashboard_url = 'https://connect.posit.cloud/christianlindell/content/019e2c85-188e-68fb-4dca-bf4169fe7d97'
 direct_url = 'https://019e2c85-188e-68fb-4dca-bf4169fe7d97.share.connect.posit.cloud'
 logs_url = 'https://connect.posit.cloud/christianlindell/content/019e2c85-188e-68fb-4dca-bf4169fe7d97/history'
-deployed_at = '2026-05-15T19:05:18+02:00'
-bundle_id = '019e2c99-7da5-3f44-989f-83b9f759cae3'
+deployed_at = '2026-05-15T23:07:24+02:00'
+bundle_id = '019e2d77-1703-c494-4d77-b7c846c9d0bb'
 files = [
   '.posit/publish/denlangabluffen-T3PO.toml',
   '.posit/publish/deployments/deployment-TN0S.toml',
   '_quarto.yml',
+  'bilder/Den-langa-bluffen-Framsida-300x439.jpg',
+  'bilder/bidrag_och_utrikesfodda/bidrag_och_utrikesfodda.jpg',
+  'bilder/demografi_eu/medianalder_EU.jpg',
+  'bilder/flyktingar_vt/barn_foraldrar_jobb.jpg',
+  'bilder/flyktingar_vt/flyktingar_sysgrad_vistelsetid_Riket.png',
+  'bilder/flyktingar_vt/flyktingar_vt_kon.jpg',
+  'bilder/flyktingar_vt/sysgrad_regso.jpg',
+  'bilder/flyktingar_vt/vt_kon.jpg',
+  'bilder/gfb_yrken/gfb_yrken.jpg',
+  'bilder/heltid_deltid_kon_eu/sys_deltid_kon_eu.jpg',
+  'bilder/regso_utsatta_omr/regso_barn.jpg',
+  'bilder/regso_utsatta_omr/regso_sjalvforsorjning.jpg',
+  'bilder/regso_utsatta_omr/regso_sysselsattning.jpg',
+  'bilder/sjalvforsorjning/sjalvforsorjande.jpg',
+  'bilder/sysgrad_fland/sys_fland.jpg',
+  'bilder/sysgrad_fland/sys_fland_somalier_afgh.jpg',
+  'bilder/vad_ar_sysselsattning/dia_alos_abs.png',
+  'bilder/vad_ar_sysselsattning/dia_alos_abs_tot.png',
+  'bilder/vad_ar_sysselsattning/dia_alos_pct.png',
+  'bilder/vad_ar_sysselsattning/dia_alos_pct_tot.png',
+  'bilder/vad_ar_sysselsattning/dia_bakgrund_reg_abs.png',
+  'bilder/vad_ar_sysselsattning/dia_bakgrund_reg_abs_tot.png',
+  'bilder/vad_ar_sysselsattning/dia_bakgrund_reg_pct.png',
+  'bilder/vad_ar_sysselsattning/dia_bakgrund_reg_pct_tot.png',
+  'bilder/vad_ar_sysselsattning/eurostat.png',
+  'bilder/vad_ar_sysselsattning/sysselsattning_ekfakta.PNG',
   'errata.qmd',
   'fland_sysgrad.qmd',
   'flyktingar_vt.qmd',
+  'images/Den-langa-bluffen-Framsida-300x439.jpg',
+  'images/paste-1.jpeg',
   'index.qmd',
   'medianalder.qmd',
   'references.qmd',
@@ -69,6 +97,8 @@ files = [
   '/bilder\sysgrad_fland\sys_fland_somalier_afgh.jpg',
   '/bilder\bidrag_och_utrikesfodda\bidrag_och_utrikesfodda.jpg',
   '/.posit/publish/denlangabluffen-T3PO.toml',
-  '/.posit/publish/deployments/deployment-TN0S.toml'
+  '/.posit/publish/deployments/deployment-TN0S.toml',
+  '/bilder',
+  '/images'
 ]
 title = 'denlangabluffen'
