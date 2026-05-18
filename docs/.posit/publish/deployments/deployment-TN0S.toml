@@ -11,8 +11,8 @@ id = '019e2c85-188e-68fb-4dca-bf4169fe7d97'
 dashboard_url = 'https://connect.posit.cloud/christianlindell/content/019e2c85-188e-68fb-4dca-bf4169fe7d97'
 direct_url = 'https://019e2c85-188e-68fb-4dca-bf4169fe7d97.share.connect.posit.cloud'
 logs_url = 'https://connect.posit.cloud/christianlindell/content/019e2c85-188e-68fb-4dca-bf4169fe7d97/history'
-deployed_at = '2026-05-15T23:07:24+02:00'
-bundle_id = '019e2d77-1703-c494-4d77-b7c846c9d0bb'
+deployed_at = '2026-05-18T11:42:23+02:00'
+bundle_id = '019e3a76-cbe9-75bb-9960-2683c28dff8a'
 files = [
   '.posit/publish/denlangabluffen-T3PO.toml',
   '.posit/publish/deployments/deployment-TN0S.toml',
@@ -60,6 +60,11 @@ files = [
 
 [connect_cloud]
 account_name = 'christianlindell'
+
+[deployment_error]
+code = 'unknown'
+message = 'Unable to render: Unable to render your content. Please check the logs for more information.'
+operation = 'publish/deployContent'
 
 [configuration]
 product_type = 'connect_cloud'
