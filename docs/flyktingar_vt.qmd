@@ -6,7 +6,7 @@ Runt 2010 skedde ett skifte i hur många år det tar för flyktingar och anhöri
 
 Diagrammet nedan visar tid in till arbete efter vilket år flyktingarna blivit kommunplacerade. De som kommunplacerarades mellan åren 2000-2024 tog det nio år innan hälften var sysselsatta. För de som kommunplacerades 2020 tog det mindre än tre år.
 
-![](bilder/flyktingar_vt/flyktingar_sysgrad_vistelsetid_Riket.pngflyktingar_sysgrad_vistelsetid_Riket.png){fig-alt="Linjediagram som visar att flyktingar blir sysselsatta allt snabbare"}
+![](bilder/flyktingar_vt\flyktingar_sysgrad_vistelsetid_Riket.png){width="880"}
 
 Men det är stora skillnader mellan män och kvinnor. Män får arbete betydligt snabbare. På lång sikt utjämnas dock skillnaderna. Kvinnor som kommunplacerades mellan 2000-2009 har i stort sett samma sysselsättningsgrad som män som kom under samma period.
 
