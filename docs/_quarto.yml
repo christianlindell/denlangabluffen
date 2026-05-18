@@ -6,7 +6,7 @@ project:
 book:
   title: "Den långa bluffen"
   author: "Christian Lindell & Alex Voronov"
-  date: "2026-02-23"
+  date: "2026-05-18"
   chapters:
     - index.qmd
     - vad_ar_sysselsattning.qmd
@@ -27,6 +27,8 @@ format:
       - cosmo
       - brand
     embed-resources: false
+    lang: sv-SE
+
 
 
 
