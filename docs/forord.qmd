@@ -1,4 +1,6 @@
-# Förord från boken "Den långa bluffen - Myterna om Sverige, arbete och invandring" {.unnumbered}
+---
+title: 'Förord till boken "Den långa bluffen"'
+---
 
 [![](images/Den-langa-bluffen-Framsida-300x439.jpg){fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)
 
