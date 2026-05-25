@@ -9,6 +9,7 @@ book:
   date: "2026-05-18"
   chapters:
     - index.qmd
+    - forord.qmd
     - vad_ar_sysselsattning.qmd
     - flyktingar_vt.qmd
     - utsatta_omraden_regso.qmd
@@ -18,6 +19,8 @@ book:
     - sys_eu_heltid_deltid.qmd
     - utrikesfodda_och_bidragsforsorjda.qmd
     - errata.qmd
+    - kontakt.qmd
+    
   
 
 

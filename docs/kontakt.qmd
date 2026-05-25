@@ -1,0 +1,11 @@
+---
+title: "Kontakta oss"
+---
+
+Vill du komma i kontakt med oss för bokning av fördrag eller frågor om boken? Du kan nå oss på mail:
+
+Christian Lindell: christian.lindell2\@gmail.com
+
+Alex Voronov: XXXX
+
+![](bilder/bild_alex_christian.jpg){fig-align="center" width="601"}
