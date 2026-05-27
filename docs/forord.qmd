@@ -2,7 +2,7 @@
 title: 'Förord till boken "Den långa bluffen"'
 ---
 
-[![](images/Den-langa-bluffen-Framsida-300x439.jpg){fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)
+[![Form: Conny Lindström](images/Den-langa-bluffen-Framsida-300x439.jpg){fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)
 
 En lång bluff i poker är en bluffstrategi där en spelare har en svag hand men spelar på ett sätt som får motspelarna att tro motsatsen. De felaktiga föreställningarna byggs upp under lång tid, över flera satsningsomgångar.
 

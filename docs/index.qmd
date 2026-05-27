@@ -2,7 +2,7 @@
 title: "Den långa bluffen - kompletterande material"
 ---
 
-Den här sajten innehåller kompletterande material till boken "Den långa bluffen" av Christian Lindell och Alex Voronov. Här hittar du diagram och texter som av olika skäl inte fick plats i boken.
+Den här sajten innehåller kompletterande material till boken "Den långa bluffen - Myter om Sverige, arbete och invandring" av Christian Lindell och Alex Voronov. Här hittar du diagram och texter som av olika skäl inte fick plats i boken.
 
 Sajten gör sig bäst på en stor skärm. Du når den på adressen <https://denlangabluffen.se>.
 
@@ -10,4 +10,4 @@ Sajten är under uppbyggnad och kommer att fyllas på med mer material framöver
 
 Boken finns att köpa i bokhandeln eller online hos de större onlinebutikerna från den 6 juni.
 
-[![](bilder/Den-langa-bluffen-Framsida-300x439.jpg){fig-alt="Omslag: Den långa bluffen" fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)
+[![Form: Conny Lindström](bilder/Den-langa-bluffen-Framsida-300x439.jpg){fig-alt="Omslag: Den långa bluffen" fig-align="center"}](https://volante.se/bocker/den-langa-bluffen/)

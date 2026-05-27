@@ -6,6 +6,4 @@ Vill du komma i kontakt med oss för bokning av fördrag eller frågor om boken?
 
 Christian Lindell: christian.lindell2\@gmail.com
 
-Alex Voronov: XXXX
-
-![](bilder/bild_alex_christian.jpg){fig-align="center" width="601"}
+![Foto: Emil Fagander ](bilder/bild_alex_christian.jpg){fig-align="center" width="601"}
