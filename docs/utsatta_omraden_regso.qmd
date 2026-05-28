@@ -1,12 +1,13 @@
 ---
 title: "Situationen förbättras för utsatta områdem"
+lang: sv
 ---
 
 Många som gör sin röst hörd i den offentliga debatten tycks ha missat utvecklingen i de så kallade "utsatta områdena". Det är en av de mest seglivade myterna att det skulle vara en växande och allt mer problematisk grupp av områden där människor lever i utanförskap, kriminalitet och bidragsberoende. Men faktum är att arbetsmarknadssituationen har förbättrats avsevärt över tid.
 
 Till att börja med har sysselsättningsgraden ökat kraftigt i stadsdelar med låg sysselsättningsgrad. Vi använder oss här av SCB:s indelning av Sverige i Regionala StatistikOmråden, RegSO, som i stort motsvarar stadsdelar när vi kommer in i städer).
 
-![](bilder/regso_utsatta_omr/regso_sysselsattning.jpg){width="575"}
+![](bilder/regso_utsatta_omr/regso_sysselsattning.png){width="575"}
 
 I den en trettiondel av RegSO-områdena som 1997 hade lägst sysselsättningsgrad arbetade 41 procent av invånarna. 2023 hade andelen stigit till 59 procent. Sysselsättningsgraden är fortfarande låg, men tillväxttakten är dramatiskt. Andelen sysselsatta har framför allt ökat sedan 2010 – vilket intressant nog sammanfaller med den stora ökningen av flyktinginvandringen.
 
