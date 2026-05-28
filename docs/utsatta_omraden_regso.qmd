@@ -11,7 +11,7 @@ Till att börja med har sysselsättningsgraden ökat kraftigt i stadsdelar med l
 
 I den en trettiondel av RegSO-områdena som 1997 hade lägst sysselsättningsgrad arbetade 41 procent av invånarna. 2023 hade andelen stigit till 59 procent. Sysselsättningsgraden är fortfarande låg, men tillväxttakten är dramatiskt. Andelen sysselsatta har framför allt ökat sedan 2010 – vilket intressant nog sammanfaller med den stora ökningen av flyktinginvandringen.
 
-Det är sant att det är många osäkra anställningar som ökat och att lönenivåerna är låga, men även *självförsörjningsgraden*, det mått som tidöregeringen ålagt SCB att mäta, visar på en stigande andel "självförsörjande" i de områden som har lägst självförsörjningsgrad. 2013 uppgick självförsörjningsgraden till 39 procent av befolkningen mellan 20-64 i den 30-del av RegSO-områdena som hade lägst självförsörjningsgrad. 2023 hade självförsörjningsgraden stigit till 48 procent.
+Det är sant att det är många osäkra anställningar som ökat och att lönenivåerna är låga, men även *självförsörjningsgraden*, det mått som tidöregeringen ålagt SCB att mäta, visar på en stigande andel "självförsörjande" i de ormråden som har lägst självförsörjningsgrad. 2013 uppgick självförsörjningsgraden till 39 procent av befolkningen mellan 20-64 i den 30-del av RegSO-områdena som hade lägst självförsörjningsgrad. 2023 hade självförsörjningsgraden stigit till 48 procent.
 
 ![](bilder/regso_utsatta_omr/regso_sjalvforsorjning.jpg){width="589"}
 
