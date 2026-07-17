@@ -10,6 +10,7 @@ book:
   chapters:
     - index.qmd
     - forord.qmd
+    - recensioner.qmd
     - vad_ar_sysselsattning.qmd
     - flyktingar_vt.qmd
     - utsatta_omraden_regso.qmd

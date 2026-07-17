@@ -1,0 +1,7 @@
+{
+  "permission": {
+    "webfetch": {
+      "https://posit-dev.github.io/*": "allow"
+    }
+  }
+}
