@@ -65,7 +65,7 @@ Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regi
 - **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
 - **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
 - **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
-- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". Krysset i rutan tömmer den.
+- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
 - **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
 
 Rutan längst ned till vänster summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.
@@ -260,6 +260,17 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
     wrap.appendChild(kryss);
     var visa = function () { kryss.hidden = !falt.value; };
     falt.addEventListener("input", visa);
+    // Zooma direkt när ett namn väljs i listan. Kartan söker bara vid "change" (Enter eller när
+    // rutan lämnas), så den händelsen skickas när texten exakt är ett av namnen i listan. Exakt
+    // matchning behövs, annars skulle kartan zooma redan medan man skriver de första bokstäverna.
+    var namn = null;
+    falt.addEventListener("input", function () {
+      if (!namn) {
+        namn = {};
+        Array.prototype.forEach.call((falt.list && falt.list.options) || [], function (o) { namn[o.value] = true; });
+      }
+      if (namn[falt.value]) falt.dispatchEvent(new Event("change"));
+    });
     falt.addEventListener("change", visa);
     kryss.addEventListener("click", function () {
       falt.value = "";
