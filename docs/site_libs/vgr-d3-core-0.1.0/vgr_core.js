@@ -81,6 +81,18 @@
       ".vgr-d3-controls .vgr-group button:first-child{border-radius:4px 0 0 4px;margin-left:0;}",
       ".vgr-d3-controls .vgr-group button:last-child{border-radius:0 4px 4px 0;}",
       ".vgr-d3-controls input[type=search]{font:inherit;padding:4px 8px;border:1px solid #b0bec5;border-radius:4px;width:170px;}",
+      // Kartornas sökruta: kryss som tömmer rutan, webbläsarens eget kryss (Chrome/Edge) dolt
+      ".vgr-d3-controls .vgr-search{position:relative;display:inline-block;}",
+      ".vgr-d3-controls .vgr-search input[type=search]{padding-right:28px;}",
+      ".vgr-d3-controls input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none;}",
+      ".vgr-d3-controls .vgr-search-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;",
+      "align-items:center;justify-content:center;width:20px;height:20px;min-height:0;padding:0;margin:0;border:0;",
+      "border-radius:50%;background:#cfd8dc;color:#37474F;font:bold 15px/1 Arial,sans-serif;cursor:pointer;}",
+      ".vgr-d3-controls .vgr-search-clear:hover,.vgr-d3-controls .vgr-search-clear:focus-visible{background:#90a4ae;color:#fff;}",
+      ".vgr-d3-controls .vgr-search-clear[hidden]{display:none;}",
+      // Pekskärmar: större knappar och sökruta att träffa med fingret
+      "@media (pointer:coarse){.vgr-d3-controls button:not(.vgr-search-clear),.vgr-d3-controls input[type=search]{min-height:36px;}",
+      ".vgr-d3-controls .vgr-search-clear{width:26px;height:26px;}}",
       ".vgr-d3-controls input[type=range]{width:180px;accent-color:#37474F;}",
       // Reglage med två handtag (startår och slutår i kartans förändringsläge): två
       // genomskinliga range-fält ovanpå varandra där bara handtagen tar emot musen
@@ -100,6 +112,8 @@
       ".vgr-d3-controls .vgr-year{min-width:44px;font-weight:bold;color:#37474F;}",
       ".vgr-d3-tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid #cfd8dc;border-radius:6px;",
       "box-shadow:0 2px 8px rgba(0,0,0,.15);padding:8px 10px;font-size:13px;color:#263238;max-width:340px;z-index:10;transition:opacity .12s;}",
+      // Smala skärmar: tooltipen får inte bli bredare än skärmen
+      "@media (max-width:480px){.vgr-d3-tooltip{max-width:calc(100vw - 32px);}}",
       ".vgr-d3-tooltip .vgr-tt-title{font-weight:bold;font-size:14px;margin-bottom:2px;}",
       ".vgr-d3-tooltip .vgr-tt-sub{color:#607d8b;margin-bottom:6px;}",
       ".vgr-d3-tooltip .vgr-tt-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;line-height:1.5;}",

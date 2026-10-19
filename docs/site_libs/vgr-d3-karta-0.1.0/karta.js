@@ -149,11 +149,40 @@
     if (spec.zoom_groups) spec.zoom_groups = byId(spec.zoom_groups);
   }
 
+  // Tillgänglig bredd för kartan: förälderns innehållsbredd i sidans egna (oskalade) pixlar.
+  // clientWidth påverkas inte av CSS-transform, så reveal.js skalning räknas inte in.
+  function availableWidth(el) {
+    var p = el.parentNode;
+    if (!p || !p.clientWidth) return 0;
+    var cs = window.getComputedStyle(p);
+    return p.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+  }
+
   vgrD3.renderers.karta = function (el, spec) {
     if (spec.compact) expandCompact(spec);
-    var W = spec.width, H = spec.height, font = spec.font;
+    var W0 = spec.width, W = spec.width, H = spec.height, font = spec.font;
+    // Responsiv layout (spec.responsive): får kartan inte plats i width ritas den i den bredd
+    // som finns, i stället för att skalas ned. Text, förklaring och knappar behåller då sin
+    // storlek. Under brytpunkten (t.ex. mobil) flyttas en förklaring till vänster eller höger
+    // under kartan, så att kartan får hela bredden, och kartan blir högre än proportionellt.
+    var RS = spec.responsive || {};
+    var smal = false;
+    if (RS.enabled) {
+      // Vid omritning mäts bredden innan det gamla innehållet tas bort (se ResizeObserver nedan)
+      var avail = spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el));
+      if (avail > 0 && avail < W0) {
+        smal = avail < RS.breakpoint;
+        H = smal ? Math.min(H, Math.round(Math.max(H * avail / W0, avail * 1.35))) : Math.round(H * avail / W0);
+        W = avail;
+        if (smal && (spec.legend.position === "left" || spec.legend.position === "right")) spec.legend.position = "bottom";
+      }
+    }
     var dur = spec.animation.duration || 0;
     var modes = spec.modes;
+    // Läge, år, startår och dolda klasser följer med när kartan ritas om efter en storleksändring
+    var behall = spec.keep_state || null;
+    if (behall && behall.from_year != null && modes.forandring && modes.forandring.setFrom &&
+        behall.from_year !== modes.forandring.from_year) modes.forandring.setFrom(behall.from_year);
     var T = spec.text, L = spec.legend, LB = spec.labels, TT = spec.tooltip, IA = spec.interactive;
     var fileName = vgrD3.slug((T.title && T.title.join(" ")) || "karta");
     var esc = vgrD3.esc;
@@ -168,6 +197,12 @@
       .attr("role", "img").attr("aria-label", (T.title && T.title.join(" ")) || "Karta")
       .attr("font-family", font)
       .style("display", "block");
+    // Responsivt: krymper sidan innan kartan hunnit ritas om skalas den med viewBox i stället
+    // för att sticka ut
+    if (RS.enabled) {
+      root.style("max-width", "100%");
+      svg.style("max-width", "100%").style("height", "auto");
+    }
     var tip = vgrD3.tooltip(el, font);
     var tipId = null;   // regionen som tooltipen visar just nu
 
@@ -175,7 +210,7 @@
       mode: spec.default_mode,
       year: spec.default_year,
       hover: null,        // legendklass som hovras
-      hidden: {},         // legendklasser som klickats bort
+      hidden: (behall && behall.hidden) || {},   // legendklasser som klickats bort
       selected: null,     // vald region/grupp (för klick-zoom)
       transform: d3.zoomIdentity
     };
@@ -370,8 +405,32 @@
       .on("mouseleave", function () { hlPath.attr("d", null); tip.hide(); })
       .on("click", function (event, d) {
         event.stopPropagation();
+        // Pekskärm: första trycket på ett område visar dess popup, nästa tryck på samma område
+        // zoomar dit. Med mus visas popupen redan när pekaren är över området.
+        if (lastPointer === "touch" && TT.show && touchTipId !== d.id) { showTouchTip(d); return; }
+        touchTipId = null;
         if (IA.zoom) clickZoom(d);
       });
+
+    // Senaste pekartyp ("mouse", "touch" eller "pen"), så att klick kan tolkas olika
+    var lastPointer = "mouse", touchTipId = null;
+    svg.on("pointerdown.vgrpekare", function (event) { lastPointer = event.pointerType || "mouse"; });
+    function showTouchTip(d) {
+      touchTipId = d.id;
+      tipId = d.id;
+      hlPath.attr("d", path(d));
+      var a = anchorPx(d.id, false);
+      if (a) tip.showAt(tooltipHtml(d.id), a[0], a[1] + svg.node().offsetTop);
+    }
+    // Tryck utanför områdena: stänger en öppen popup på pekskärm, annars återställs zoomen
+    function closeTouchTip() {
+      if (lastPointer !== "touch" || touchTipId == null) return false;
+      touchTipId = null;
+      tipId = null;
+      hlPath.attr("d", null);
+      tip.hide();
+      return true;
+    }
 
     // Överlagrade gränser (t.ex. kommunalförbund)
     if (spec.overlay) {
@@ -814,6 +873,9 @@
       })
       .on("start", function () { labelG.attr("opacity", 0); lineG.attr("opacity", 0); tip.hide(); })
       .on("zoom", function (event) {
+        // Kartan flyttas eller zoomas: en popup som öppnats med ett tryck är inte längre aktuell
+        // ("start" kommer redan när fingret sätts ned, även vid ett vanligt tryck)
+        touchTipId = null;
         state.transform = event.transform;
         zoomG.attr("transform", event.transform);
         setStrokeScale(event.transform.k);
@@ -858,11 +920,16 @@
       tip.hide();
       svg.transition().duration(dur).call(zoom.transform, d3.zoomIdentity);
     }
+    function backgroundClick() { if (!closeTouchTip() && IA.zoom) resetZoom(); }
     if (IA.zoom) {
       svg.call(zoom).on("dblclick.zoom", null);
-      zoomRect.on("click", resetZoom);
+      zoomRect.on("click", backgroundClick);
       // Klick på bakgrundskartan (utanför dataregionerna) återställer också zoomen
-      baseG.selectAll("path").style("cursor", "default").on("click", resetZoom);
+      baseG.selectAll("path").style("cursor", "default").on("click", backgroundClick);
+    } else {
+      // Utan zoom stänger ett tryck utanför områdena bara popupen
+      zoomRect.on("click", backgroundClick);
+      baseG.selectAll("path").on("click", backgroundClick);
     }
 
     // -------------------------------------------------------------------------
@@ -968,12 +1035,34 @@
     if (IA.search) {
       var listId = el.id + "-names";
       var names = Object.keys(spec.rows).map(function (k) { return String(spec.rows[k].name); }).sort(d3.ascending);
-      var input = controls.append("input").attr("type", "search")
+      // Sökrutan ligger i en egen span med ett kryss som tömmer den (webbläsarens eget kryss,
+      // som bara finns i Chrome/Edge, döljs i CSS:en så att det ser likadant ut överallt)
+      var sokWrap = controls.append("span").attr("class", "vgr-search");
+      var input = sokWrap.append("input").attr("type", "search")
         .attr("placeholder", "Sök område…").attr("list", listId).attr("aria-label", "Sök område");
+      var tomKnapp = sokWrap.append("button").attr("type", "button").attr("class", "vgr-search-clear")
+        .attr("title", "Töm sökrutan").attr("aria-label", "Töm sökrutan").text("×").property("hidden", true);
       controls.append("datalist").attr("id", listId)
         .selectAll("option").data(names).join("option").attr("value", function (d) { return d; });
-      input.on("change", function () { searchFor(this.value); })
-        .on("keydown", function (event) { if (event.key === "Enter") searchFor(this.value); });
+      var finnsNamn = {};
+      names.forEach(function (n) { finnsNamn[n] = true; });
+      var senastSokt = null;
+      var visaKryss = function () { tomKnapp.property("hidden", !input.property("value")); };
+      // Samma namn söks bara en gång när det väljs och rutan sedan lämnas ("change");
+      // Enter söker alltid, t.ex. efter att man zoomat bort från området
+      var sokEnGang = function (text) { if (text === senastSokt) return; senastSokt = text; searchFor(text); };
+      input
+        // Ett namn som väljs i listan, eller skrivs helt, zoomar direkt utan Enter. Ofullständiga
+        // namn gör ingenting, så att kartan inte zoomar medan man skriver de första bokstäverna.
+        .on("input", function () { visaKryss(); if (finnsNamn[this.value]) sokEnGang(this.value); })
+        .on("change", function () { visaKryss(); sokEnGang(this.value); })
+        .on("keydown", function (event) { if (event.key === "Enter") { senastSokt = this.value; searchFor(this.value); } });
+      tomKnapp.on("click", function () {
+        input.property("value", "");
+        senastSokt = null;
+        visaKryss();
+        input.node().focus();
+      });
     }
     if (IA.zoom) vgrD3.button(controls, "Återställ", resetZoom, "Återställ zoom och markering");
     controls.append("span").attr("class", "vgr-spacer");
@@ -1011,5 +1100,50 @@
     }
     update(false);
     positionUnscaled();
+
+    // Responsiv layout: rita om kartan när den tillgängliga bredden ändras (fönstret ändrar
+    // storlek, mobilen vänds). Spec:en läses om från sidan, eftersom den packas upp i
+    // expandCompact, och läge, år, startår och dolda klasser följer med. Zoomen börjar om.
+    if (RS.enabled && typeof ResizeObserver !== "undefined" && el.parentNode) {
+      if (el.__vgrResize) el.__vgrResize.disconnect();
+      var omritning = null;
+      var ro = new ResizeObserver(function () {
+        var b = Math.floor(availableWidth(el));
+        if (!b) return;   // dold (t.ex. en reveal.js-bild som inte visas)
+        if (Math.abs(Math.min(W0, b) - W) < 2) return;
+        // Tillbaka till bredden före förra omritningen strax efter den: den nya kartans höjd har
+        // troligen tagit fram eller tagit bort rullningslisten. Rita inte om igen (ingen pendling).
+        var f = el.__vgrForra;
+        if (f && Math.abs(Math.min(W0, b) - f.bredd) < 2 && Date.now() - f.tid < 1500) return;
+        clearTimeout(omritning);
+        omritning = setTimeout(function () {
+          var specEl = document.getElementById(el.id + "-spec");
+          if (!specEl) return;
+          ro.disconnect();
+          stopPlay();
+          var ny = JSON.parse(specEl.textContent);
+          // Bredden mäts medan den gamla kartan finns kvar, och höjden hålls under omritningen.
+          // Annars kan sidan bli kortare när innehållet tas bort, så att rullningslisten försvinner,
+          // bredden ändras och kartan ritas om i en evig loop.
+          var bNu = Math.floor(availableWidth(el));
+          if (!bNu) { ro.observe(el.parentNode); return; }
+          ny.avail_width = bNu;
+          el.__vgrForra = { bredd: W, tid: Date.now() };
+          el.style.minHeight = el.offsetHeight + "px";
+          ny.default_mode = state.mode;
+          ny.default_year = state.year;
+          ny.keep_state = {
+            from_year: state.mode === "forandring" && modes.forandring ? modes.forandring.from_year : null,
+            hidden: state.hidden
+          };
+          d3.select(el).selectAll("*").remove();
+          el.style.width = "";
+          vgrD3.renderers.karta(el, ny);
+          el.style.minHeight = "";
+        }, 200);
+      });
+      ro.observe(el.parentNode);
+      el.__vgrResize = ro;
+    }
   };
 })();

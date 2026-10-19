@@ -65,10 +65,11 @@ Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regi
 - **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
 - **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
 - **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
+- **På mobil och pekplatta** trycker du på ett område för att se detaljerna och trycker en gång till för att zooma in på det. Nyp för att zooma och dra med ett finger för att flytta kartan.
 - **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
 - **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
 
-Rutan längst ned till vänster summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.
+Rutan längst ned till vänster i kartan (under kartan på mobil och pekplatta) summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.
 
 <!-- Kartan breder bara ut sig åt höger (column-body-outset-right). Med column-page fälls
      bokens innehållsförteckning till vänster ihop, eftersom kartan annars skulle täcka den. -->
@@ -147,32 +148,26 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
      räknar om direkt när året byts (en MutationObserver på årtexten) och fyra gånger i sekunden
      medan kartan syns på skärmen, vilket täcker zoom och klick i teckenförklaringen. Alla värden
      skrivs i samma uppdatering, så de byts alltid samtidigt. Till skillnad från presentationen
-     finns inga reveal-bilder: kartan hittas i blocket #regso-karta. -->
+     finns inga reveal-bilder: kartan hittas i blocket #regso-karta.
+     Sökrutans kryss, zoom vid val i listan, pekskärmsstödet och kartans anpassning till smala
+     skärmar finns i funcVGRD3 (från version 0.8.0). Kartan ritas om när sidans bredd ändras,
+     och då skapas rutan på nytt. -->
 <style>
-/* Kartan krymper till sidans bredd på mindre skärmar (SVG:n har en viewBox, så innehållet skalas;
-   rutans beräkningar använder SVG:ns egna koordinater och påverkas inte) */
-#regso-karta .vgr-d3-container { width: auto !important; max-width: 1100px; }
-#regso-karta svg.vgr-d3-svg { width: 100%; height: auto; }
 .invanare-ruta { position: absolute; left: 0; bottom: 4px; width: 215px; padding: 5px 7px;
   background: #fff; border: 1px solid #cfd8dc; border-radius: 6px; pointer-events: none;
   font-family: Verdana, sans-serif; font-size: 11px; line-height: 1.5; color: #37474F; }
 .invanare-ruta .tal { font-size: 13px; font-weight: bold; color: #0d366b; white-space: nowrap; }
-/* Kryss som tömmer sökrutan. Webbläsarens eget kryss (finns bara i Chrome/Edge) döljs, så att
-   det ser likadant ut överallt */
-.sok-wrap { position: relative; display: inline-block; }
-#regso-karta .sok-wrap input[type=search] { padding-right: 26px; }
-#regso-karta input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
-.sok-kryss { position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
-  display: flex; align-items: center; justify-content: center;
-  width: 20px; height: 20px; padding: 0; margin: 0; border: 0; border-radius: 50%;
-  background: #cfd8dc; color: #37474F; font: bold 15px/1 Arial, sans-serif; cursor: pointer; }
-.sok-kryss:hover, .sok-kryss:focus-visible { background: #90a4ae; color: #fff; }
-.sok-kryss[hidden] { display: none; }
+/* På mobiler och pekplattor i stående läge (smalare än 992 px, där bokens innehållsförteckning
+   fälls ihop) läggs rutan under kartan i stället för ovanpå den, så att den inte skymmer kartan */
+@media (max-width: 991.98px) {
+  #regso-karta .invanare-ruta { position: static; width: auto; margin-top: 6px; font-size: 13px; }
+  #regso-karta .invanare-ruta .tal { font-size: 15px; }
+}
 </style>
 <script>
 (function () {
   var bef = JSON.parse(document.getElementById("bef-regso").textContent);
-  var ruta = null, bbox = {}, senaste = null, arVakt = null;
+  var ruta = null, bbox = {}, senaste = null, arVakt = null, kartSvg = null;
   function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
   function syns(el) {
     var r = el.getBoundingClientRect();
@@ -186,6 +181,15 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
     var yta = svg && svg.querySelector("svg.vgr-map-area");
     var arText = cont.querySelector(".vgr-year");
     if (!yta || !arText) return;   // kartan är inte ritad än
+    // Kartan har ritats om (ny bredd): områdenas koordinater är nya och rutan och årtexten är
+    // borttagna, så allt kopplas om
+    if (svg !== kartSvg) {
+      kartSvg = svg;
+      bbox = {};
+      senaste = null;
+      if (arVakt) { arVakt.disconnect(); arVakt = null; }
+      if (ruta && !ruta.isConnected) ruta = null;
+    }
     if (!ruta) {
       cont.style.position = "relative";
       ruta = document.createElement("div");
@@ -202,6 +206,7 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
       var tr = tips.getBoundingClientRect(), cr = cont.getBoundingClientRect();
       var rr = ruta.getBoundingClientRect();
       if (tr.width > 0 && tr.left < rr.left + rr.width) {
+        // (Under kartan på små skärmar är rutan inte absolut placerad, och då gör bottom inget)
         ruta.style.bottom = Math.max(4, Math.ceil(cr.bottom - tr.top) + 4) + "px";
       }
     }
@@ -240,47 +245,7 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
       fmt(summa) + "</span><br>Sysselsatta: <span class='tal'>" + andel + "</span><br>" +
       fmt(antal) + (antal === 1 ? " område" : " områden");
   }
-  // Kryss i sökrutan som tömmer den. Sökrutan skapas av func_d3_karta, så krysset läggs till
-  // när den finns. Kartans egen sökning (zoom till området) körs när man väljer ett namn och
-  // påverkas inte; "Återställ" visar hela landet igen.
-  function sokKryss() {
-    var falt = document.querySelector("#regso-karta .vgr-d3-controls input[type=search]");
-    if (!falt || falt.dataset.kryss) return;
-    falt.dataset.kryss = "1";
-    var wrap = document.createElement("span");
-    wrap.className = "sok-wrap";
-    falt.parentNode.insertBefore(wrap, falt);
-    wrap.appendChild(falt);
-    var kryss = document.createElement("button");
-    kryss.type = "button";
-    kryss.className = "sok-kryss";
-    kryss.textContent = "×";
-    kryss.title = "Töm sökrutan";
-    kryss.setAttribute("aria-label", "Töm sökrutan");
-    wrap.appendChild(kryss);
-    var visa = function () { kryss.hidden = !falt.value; };
-    falt.addEventListener("input", visa);
-    // Zooma direkt när ett namn väljs i listan. Kartan söker bara vid "change" (Enter eller när
-    // rutan lämnas), så den händelsen skickas när texten exakt är ett av namnen i listan. Exakt
-    // matchning behövs, annars skulle kartan zooma redan medan man skriver de första bokstäverna.
-    var namn = null;
-    falt.addEventListener("input", function () {
-      if (!namn) {
-        namn = {};
-        Array.prototype.forEach.call((falt.list && falt.list.options) || [], function (o) { namn[o.value] = true; });
-      }
-      if (namn[falt.value]) falt.dispatchEvent(new Event("change"));
-    });
-    falt.addEventListener("change", visa);
-    kryss.addEventListener("click", function () {
-      falt.value = "";
-      visa();
-      falt.focus();
-    });
-    visa();
-  }
-
-  setInterval(function () { sokKryss(); rakna(); }, 250);
+  setInterval(rakna, 250);
 })();
 </script>
 ```
