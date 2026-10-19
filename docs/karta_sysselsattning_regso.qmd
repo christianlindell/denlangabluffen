@@ -181,6 +181,19 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
       ruta.className = "invanare-ruta";
       cont.appendChild(ruta);
     }
+    // Kartan skriver "Zooma in för att visa värden" i kartytans nedre vänstra hörn. Rutan läggs
+    // ovanför den texten när de annars skulle överlappa (texten försvinner när man zoomat in,
+    // men rutan ligger kvar på samma höjd så att den inte hoppar)
+    var tips = Array.prototype.find.call(svg.querySelectorAll("text"), function (e) {
+      return e.textContent.indexOf("Zooma in") === 0;
+    });
+    if (tips) {
+      var tr = tips.getBoundingClientRect(), cr = cont.getBoundingClientRect();
+      var rr = ruta.getBoundingClientRect();
+      if (tr.width > 0 && tr.left < rr.left + rr.width) {
+        ruta.style.bottom = Math.max(4, Math.ceil(cr.bottom - tr.top) + 4) + "px";
+      }
+    }
     // Räkna om så fort årtexten ändras (byte av år, uppspelning), inte först vid nästa intervall
     if (!arVakt) {
       arVakt = new MutationObserver(rakna);
