@@ -838,11 +838,17 @@
         .text(function (d) { return d.label; });
       if (IA.legend) {
         item.append("title").text("Klicka för att dölja/visa");
+        // Hovringsmarkeringen gäller bara mus. På pekskärm skickar webbläsaren en mouseenter vid
+        // trycket men ingen mouseleave, så markeringen fastnade och tonade ned alla andra klasser.
         item
-          .on("mouseenter", function (event, d) { state.hover = d.key; applyFills(false); })
-          .on("mouseleave", function () { state.hover = null; applyFills(false); })
+          .on("pointerenter", function (event, d) {
+            if (event.pointerType !== "mouse") return;
+            state.hover = d.key; applyFills(false);
+          })
+          .on("pointerleave", function () { state.hover = null; applyFills(false); })
           .on("click", function (event, d) {
             event.stopPropagation();
+            if (lastPointer !== "mouse") state.hover = null;
             state.hidden[d.key] = !state.hidden[d.key];
             update(false);
           });
