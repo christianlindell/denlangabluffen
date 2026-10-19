@@ -90,9 +90,21 @@
       "border-radius:50%;background:#cfd8dc;color:#37474F;font:bold 15px/1 Arial,sans-serif;cursor:pointer;}",
       ".vgr-d3-controls .vgr-search-clear:hover,.vgr-d3-controls .vgr-search-clear:focus-visible{background:#90a4ae;color:#fff;}",
       ".vgr-d3-controls .vgr-search-clear[hidden]{display:none;}",
-      // Pekskärmar: större knappar och sökruta att träffa med fingret
+      // Sökrutans förslagslista (egen, eftersom <datalist> inte visas som lista i många mobiler)
+      ".vgr-d3-controls .vgr-search-list{position:absolute;left:0;top:100%;z-index:20;margin:2px 0 0;padding:2px 0;",
+      "list-style:none;min-width:100%;width:max-content;max-width:min(420px,calc(100vw - 32px));max-height:min(300px,50vh);overflow-y:auto;",
+      // Scrollning i listan (även med fingret) scrollar inte sidan när listans slut nås
+      "overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;",
+      "background:#fff;border:1px solid #b0bec5;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.18);text-align:left;}",
+      ".vgr-d3-controls .vgr-search-list[hidden]{display:none;}",
+      ".vgr-d3-controls .vgr-search-list li{padding:5px 10px;cursor:pointer;white-space:nowrap;overflow:hidden;",
+      "text-overflow:ellipsis;font-size:13px;line-height:1.3;color:#263238;}",
+      ".vgr-d3-controls .vgr-search-list li.vgr-forslag:hover,.vgr-d3-controls .vgr-search-list li.vgr-aktiv{background:#eceff1;}",
+      ".vgr-d3-controls .vgr-search-list li.vgr-search-more{cursor:default;color:#607d8b;font-style:italic;white-space:normal;}",
+      // Pekskärmar: större knappar, sökruta och förslag att träffa med fingret
       "@media (pointer:coarse){.vgr-d3-controls button:not(.vgr-search-clear),.vgr-d3-controls input[type=search]{min-height:36px;}",
-      ".vgr-d3-controls .vgr-search-clear{width:26px;height:26px;}}",
+      ".vgr-d3-controls .vgr-search-clear{width:26px;height:26px;}",
+      ".vgr-d3-controls .vgr-search-list li{padding:10px 12px;font-size:15px;}}",
       ".vgr-d3-controls input[type=range]{width:180px;accent-color:#37474F;}",
       // Reglage med två handtag (startår och slutår i kartans förändringsläge): två
       // genomskinliga range-fält ovanpå varandra där bara handtagen tar emot musen

@@ -1045,27 +1045,100 @@
       // som bara finns i Chrome/Edge, döljs i CSS:en så att det ser likadant ut överallt)
       var sokWrap = controls.append("span").attr("class", "vgr-search");
       var input = sokWrap.append("input").attr("type", "search")
-        .attr("placeholder", "Sök område…").attr("list", listId).attr("aria-label", "Sök område");
+        .attr("placeholder", "Sök område…").attr("aria-label", "Sök område").attr("autocomplete", "off")
+        .attr("role", "combobox").attr("aria-autocomplete", "list").attr("aria-expanded", "false")
+        .attr("aria-controls", listId);
       var tomKnapp = sokWrap.append("button").attr("type", "button").attr("class", "vgr-search-clear")
         .attr("title", "Töm sökrutan").attr("aria-label", "Töm sökrutan").text("×").property("hidden", true);
-      controls.append("datalist").attr("id", listId)
-        .selectAll("option").data(names).join("option").attr("value", function (d) { return d; });
+      // Egen förslagslista i stället för <datalist>, som inte visas som en lista i många mobila
+      // webbläsare (iPhone visar förslagen ovanför tangentbordet, Firefox för Android inte alls)
+      var lista = sokWrap.append("ul").attr("class", "vgr-search-list").attr("id", listId)
+        .attr("role", "listbox").property("hidden", true);
+      // Listan scrollar; fler träffar än så här visas inte, i stället en rad om att skriva mer
+      var MAX_FORSLAG = 250;   // ryms alla områden i en kommun
       var finnsNamn = {};
       names.forEach(function (n) { finnsNamn[n] = true; });
-      var senastSokt = null;
+      var senastSokt = null, forslag = [], aktiv = -1;
       var visaKryss = function () { tomKnapp.property("hidden", !input.property("value")); };
       // Samma namn söks bara en gång när det väljs och rutan sedan lämnas ("change");
       // Enter söker alltid, t.ex. efter att man zoomat bort från området
       var sokEnGang = function (text) { if (text === senastSokt) return; senastSokt = text; searchFor(text); };
+      var doljLista = function () {
+        forslag = []; aktiv = -1;
+        lista.property("hidden", true).selectAll("li").remove();
+        input.attr("aria-expanded", "false").attr("aria-activedescendant", null);
+      };
+      var markeraAktiv = function () {
+        lista.selectAll("li.vgr-forslag").classed("vgr-aktiv", function (d, i) { return i === aktiv; })
+          .attr("aria-selected", function (d, i) { return i === aktiv ? "true" : "false"; });
+        input.attr("aria-activedescendant", aktiv >= 0 ? listId + "-" + aktiv : null);
+        var li = lista.select("li.vgr-aktiv").node();
+        if (li && li.scrollIntoView) li.scrollIntoView({ block: "nearest" });
+      };
+      var valj = function (namn) {
+        input.property("value", namn);
+        doljLista();
+        visaKryss();
+        sokEnGang(namn);
+      };
+      // Namn som börjar med texten först, sedan namn som innehåller den
+      var visaForslag = function () {
+        var q = String(input.property("value") || "").trim().toLowerCase();
+        if (!q || finnsNamn[input.property("value")]) { doljLista(); return; }
+        var borjar = [], innehaller = [];
+        names.forEach(function (n) {
+          var i = n.toLowerCase().indexOf(q);
+          if (i === 0) borjar.push(n); else if (i > 0) innehaller.push(n);
+        });
+        var alla = borjar.concat(innehaller);
+        forslag = alla.slice(0, MAX_FORSLAG);
+        aktiv = -1;
+        if (!forslag.length) { doljLista(); return; }
+        lista.selectAll("li").remove();
+        lista.node().scrollTop = 0;
+        lista.selectAll("li.vgr-forslag").data(forslag).join("li").attr("class", "vgr-forslag")
+          .attr("id", function (d, i) { return listId + "-" + i; })
+          .attr("role", "option")
+          .text(function (d) { return d; })
+          // pointerdown med preventDefault: rutan tappar inte fokus (och listan döljs inte) före valet
+          .on("pointerdown mousedown", function (event) { event.preventDefault(); })
+          .on("click", function (event, d) { valj(d); });
+        if (alla.length > forslag.length) {
+          lista.append("li").attr("class", "vgr-search-more").attr("role", "presentation")
+            .text("… och " + (alla.length - forslag.length) + " till. Skriv mer för att begränsa.")
+            .on("pointerdown mousedown", function (event) { event.preventDefault(); });
+        }
+        lista.property("hidden", false);
+        input.attr("aria-expanded", "true");
+        markeraAktiv();
+      };
       input
         // Ett namn som väljs i listan, eller skrivs helt, zoomar direkt utan Enter. Ofullständiga
         // namn gör ingenting, så att kartan inte zoomar medan man skriver de första bokstäverna.
-        .on("input", function () { visaKryss(); if (finnsNamn[this.value]) sokEnGang(this.value); })
+        .on("input", function () {
+          visaKryss();
+          if (finnsNamn[this.value]) { doljLista(); sokEnGang(this.value); } else visaForslag();
+        })
         .on("change", function () { visaKryss(); sokEnGang(this.value); })
-        .on("keydown", function (event) { if (event.key === "Enter") { senastSokt = this.value; searchFor(this.value); } });
+        .on("focus", function () { if (this.value) visaForslag(); })
+        .on("blur", function () { doljLista(); })
+        .on("keydown", function (event) {
+          if (event.key === "ArrowDown" && forslag.length) {
+            event.preventDefault(); aktiv = (aktiv + 1) % forslag.length; markeraAktiv();
+          } else if (event.key === "ArrowUp" && forslag.length) {
+            event.preventDefault(); aktiv = aktiv <= 0 ? forslag.length - 1 : aktiv - 1; markeraAktiv();
+          } else if (event.key === "Escape" && forslag.length) {
+            event.preventDefault(); doljLista();
+          } else if (event.key === "Enter") {
+            if (aktiv >= 0) { event.preventDefault(); valj(forslag[aktiv]); return; }
+            doljLista();
+            senastSokt = this.value; searchFor(this.value);
+          }
+        });
       tomKnapp.on("click", function () {
         input.property("value", "");
         senastSokt = null;
+        doljLista();
         visaKryss();
         input.node().focus();
       });
