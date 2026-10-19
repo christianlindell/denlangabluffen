@@ -60,73 +60,83 @@
     ]
   },
   {
+    "objectID": "karta_sysselsattning_regso.html",
+    "href": "karta_sysselsattning_regso.html",
+    "title": "7  Karta: andel sysselsatta i varje stadsdel",
+    "section": "",
+    "text": "Kartan visar andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren 2005–2024. Ju mörkare blå färg, desto högre andel sysselsatta. Så här använder du kartan:\n\nByt år genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från 2005.\nSe förändringen mellan två år genom att välja Förändring. Med reglagets två handtag väljer du startår och slutår.\nZooma med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. Återställ visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.\nSe detaljer genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.\nSök efter ett område i sökrutan. Namnet följs av kommunen, t.ex. “Haga (Göteborg)”.\nVälj bort grupper av områden genom att klicka på dem i teckenförklaringen.\n\nRutan längst ned till vänster summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.\n\n\n\n\n\n\n\n\n\n\n\n\n\nKälla: SCB, RegSO 2025 (geometri) samt sysselsättnings-, studerande- och befolkningsstatistik per RegSO. Befolkningen redovisas inte när den understiger 5 personer, och antalet sysselsatta inte när antalet, eller antalet i befolkningen som inte ingår i gruppen, understiger 5 personer. Studentområden är områden där mer än 40 % var studerande 2023.",
+    "crumbs": [
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Karta: andel sysselsatta i varje stadsdel</span>"
+    ]
+  },
+  {
     "objectID": "yrken_gfb.html",
     "href": "yrken_gfb.html",
-    "title": "7  Vilken typ av invandrare arbetar i olika yrken",
+    "title": "8  Vilken typ av invandrare arbetar i olika yrken",
     "section": "",
     "text": "Vilken typ av invandrare dominerar bland invandrartäta yrken?\nOfta drar man i debatten en skarp gräns mellan flykting- och arbetskraftsinvandring. Men totalt sett har flyktinginvandringen en större betydelse för arbetskraftsförsörjningen än arbetskraftsinvandringen från länder utanför EU/EES. Framför allt inom vård- och omsorg är flyktinginvandringen av stor betydelse. Men även arbetskraftsinvandringen till vårdyrken är av större betydelse än vad som ibland framgår av debatten.\n\nLO har rätt i att det är liten arbetskraftsinvandring till yrken inom vård- och omsorg. Men det gäller endast om vi räknar tvärsnitt och ser till hur många som har arbetstillstånd just nu. Det riskerar att bli missvisande eftersom många som sökt sig till Sverige som arbetskraftsinvandrare med tiden rotar sig här och blir svenska medborgare och inte längre behöver arbetstillstånd.\n\nRäknar vi på senast uppgivna grund för bosättning ser vi att det är en stor grupp som kommit hit som arbetskraftsinvandrare även inom vård- och omsorg. Många av dessa är numera svenska medborgare och ingår inte längre i Migrationsverkets statistik över arbetskraftsinvandring.",
     "crumbs": [
-      "<span class='chapter-number'>7</span>  <span class='chapter-title'>Vilken typ av invandrare arbetar i olika yrken</span>"
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Vilken typ av invandrare arbetar i olika yrken</span>"
     ]
   },
   {
     "objectID": "medianalder.html",
     "href": "medianalder.html",
-    "title": "8  Medianålder i Europa och Sverige",
+    "title": "9  Medianålder i Europa och Sverige",
     "section": "",
     "text": "Sverige tillhör de länder som har lägst medianålder i Europa och har, tillsammans med Malta och Luxemburg, i stort sett oförändrad medianålder år 2024 jämfört med 2010. Detta är till stor del en följd av Sveriges stora invandring. Sverige har därmed en betydligt gynnsammare åldersstruktur än framför allt ett antal länder i sydeuropa.\nItalien sticker ut som ett av länderna med högst medelålder. Italien har dessutom svårt att sysselsätta den förhållandevis låga andelen av befolkningen som är i arbetsför ålder och tillhör bottenligan vad gäller sysselsättningsgrad.",
     "crumbs": [
-      "<span class='chapter-number'>8</span>  <span class='chapter-title'>Medianålder i Europa och Sverige</span>"
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Medianålder i Europa och Sverige</span>"
     ]
   },
   {
     "objectID": "fland_sysgrad.html",
     "href": "fland_sysgrad.html",
-    "title": "9  Utrikesfödda möjliggör en ökning av sysselsättningen",
+    "title": "10  Utrikesfödda möjliggör en ökning av sysselsättningen",
     "section": "",
     "text": "Utrikesfödda har en betydande roll i att öka sysselsättningen i Sverige. Flyktingar står för en stor del av sysselsättningen inom vård, omsorg och serviceyrken.\n2010 var det senaste år då tillväxten av jobb var större bland inrikesfödda än bland utrikesfödda i absoluta tal. Sedan dess har utrikesfödda varje år dominerat jobbtillväxten. Samtidigt har andelen sysselsatta bland utrikesfödda stigit stadigt sedan 2009. År 2016 nådde sysselsättningsgraden 84 % för inrikesfödda. Där har den i stort sett legat kvar med någon enstaka procentenhets variation upp och ned, oavsett konjunktur och pandemi. Det tycks som om vi nått ett tak för hur många inrikesfödda som går att sysselsätta. Sedan 2016 domineras jobbtillväxten fullständigt av utrikesfödda och vi ser till och med en nettominskning av förvärvsarbetande inrikesfödda: 2024 arbetade det färre inrikesfödda än det gjorde 2016. Det kan delvis förklaras av att antalet inrikesfödda i förvärvsarbetande ålder minskat under perioden.\nBortser vi från pandemin kan vi i stort sett se en linjär tillväxt av sysselsättningsgraden för utrikesfödda från 2009 fram till 2022, från 54 % till 70 %. De senaste åren har lågkonjunkturen inneburit en relativt marginell minskning av sysselsättningsgraden. Men preliminär sysselsättningsstatistik tyder på att sysselsättningen bland utrikesfödda börjat öka igen. Om antagandet att vi slagit i taket för andelen arbetande inrikesfödda stämmer, talar mycket för att denna utveckling kommer att fortsätta. De senaste årens lågkonjunktur har bara marginellt påverkat sysselsättningen. Enligt SCB:s preliminära sysselsättningsstatistik (BAS) sjönk sysselsättningsgraden för utrikesfödda med en halv procentenhet mellan februari 2024 och februari 2025, men steg sedan med 0,6 procentenheter mellan februari 2025 och februari 2026. Även om det är preliminär statistik så tyder mycket på att vi för närvarande har den högsta andelen förvärvsarbetande utrikesfödda i arbetsför ålder som uppmätts, i alla fall sedan slutet på 80-talet (vilket vi saknar statistik för).\n\nTvå invandrargrupper som drabbats av stormar av hat på sociala medier är somalier och afghaner. Ofta citeras en gammal artikel från tidningen Arbetet från 2015 som innehåller statistik från 2010 som visar att endast drygt 20 % av somalierna i förvärvsarbetande ålder var förvärvsarbetande. Det stämmer, men som diagrammet nedan visar har utvecklingen av sysselsättningsgraden varit mycket kraftig sedan dess. 2023 var det 58 % av somalierna som hade jobb. En nästan lika kraftig sysselsättningstillväxt ser vi hos afghaner, vars sysselsättningsgrad stigit från 30 % 2010 till 70 % 2023.",
     "crumbs": [
-      "<span class='chapter-number'>9</span>  <span class='chapter-title'>Utrikesfödda möjliggör en ökning av sysselsättningen</span>"
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Utrikesfödda möjliggör en ökning av sysselsättningen</span>"
     ]
   },
   {
     "objectID": "sys_eu_heltid_deltid.html",
     "href": "sys_eu_heltid_deltid.html",
-    "title": "10  Många deltidsarbetande kvinnor i EU-länderna jämfört med i Sverige",
+    "title": "11  Många deltidsarbetande kvinnor i EU-länderna jämfört med i Sverige",
     "section": "",
     "text": "Många kvinnor i EU-länderna arbetar deltid, vilket kan bero på olika faktorer som familjeansvar, brist på heltidsjobb, brist på barnomsorg eller personliga preferenser. I Sverige är det dock vanligare att kvinnor arbetar heltid jämfört med många andra EU-länder. De länder som har hög andel deltidsarbetande kvinnor inkluderar Nederländerna, Tyskland och Österrike, där deltidsarbete är mer utbrett. I Sverige är det däremot vanligare att kvinnor arbetar heltid, vilket kan bero på en mer jämställd arbetsmarknad och bättre tillgång till barnomsorg.\nEtt intressant undantag är att många av länderna i det forna östblocket, som Polen, Tjeckien och Slovakien, har en hög andel kvinnor som arbetar heltid. Detta kan bero på historiska och kulturella faktorer, där det under kommunisttiden var vanligt att både män och kvinnor deltog i arbetslivet. Därtill kommer att det finns ekonomiska faktorer som gör att kvinnor i dessa länder behöver arbeta heltid för att försörja sig själva och sina familjer.",
     "crumbs": [
-      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Många deltidsarbetande kvinnor i EU-länderna jämfört med i Sverige</span>"
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Många deltidsarbetande kvinnor i EU-länderna jämfört med i Sverige</span>"
     ]
   },
   {
     "objectID": "utrikesfodda_och_bidragsforsorjda.html",
     "href": "utrikesfodda_och_bidragsforsorjda.html",
-    "title": "11  Färre bidragsförsörjda och fler utrikesfödda",
+    "title": "12  Färre bidragsförsörjda och fler utrikesfödda",
     "section": "",
     "text": "Väldigt många tycks leva i villfarelsen att en allt högre andel av befolkningen blir beroende av sociala ersättningar och bidrag i takt med att andelen invandrare av befolkningen ökar. Men så är inte fallet. Tvärtom är statistiken glasklar: Andelen “bidragsförsörjda” har minskat i takt med att andelen utrikesfödda ökat.\nDen stora flyktingvågen i mitten av 10-talet tycks inte haft någon större inverkan på den sjunkande andelen av befolkningen som försörjs av sociala ersättningar och bidrag. Tvärtom fortsatte den sjunkande trenden.\nDet finns två troliga förklaringar till den minskande andelen “bidragstagande”. Den största förklaringen är att en allt högre andel av befolkningen förvärvsarbetar. Den andra förklaringen är att det blivit svårare att kvalificera sig för att få tillgång till samhällets skyddsnät. Om vi studerar utrikesfödda, vilka är kraftigt överrepresenterade bland mottagare av ekonomisk bistånd, kan vi se att andelen förvärvsarbetande varit stigande under lång tid. De senaste årens konjunkturnedgång har endast marginellt påverkat sysselsättningsgraden för utrikesfödda. Enligt SCB:s preliminära sysselsättningsstatistik (BAS) sjönk sysselsättningsgraden för utrikesfödda med en halv procentenhet mellan februari 2024 och februari 2025, men steg sedan med 0,6 procentenheter mellan februari 2025 och februari 2026.\n\nKälla:\nSociala ersättningar och bidrag 1990-2025 (excel)",
     "crumbs": [
-      "<span class='chapter-number'>11</span>  <span class='chapter-title'>Färre bidragsförsörjda och fler utrikesfödda</span>"
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Färre bidragsförsörjda och fler utrikesfödda</span>"
     ]
   },
   {
     "objectID": "errata.html",
     "href": "errata.html",
-    "title": "12  Rättelser",
+    "title": "13  Rättelser",
     "section": "",
     "text": "Trots att vi har försökt att vara noggranna så kan det finnas fel i boken. Här samlar vi de fel som vi har hittat. Här har vi samlat rättelser (eller errata som det heter i finare sammanhang).",
     "crumbs": [
-      "<span class='chapter-number'>12</span>  <span class='chapter-title'>Rättelser</span>"
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Rättelser</span>"
     ]
   },
   {
     "objectID": "kontakt.html",
     "href": "kontakt.html",
-    "title": "13  Kontakta oss",
+    "title": "14  Kontakta oss",
     "section": "",
     "text": "Vill du komma i kontakt med oss för bokning av fördrag eller frågor om boken? Du kan nå oss på mail:\nChristian Lindell: christian.lindell2@gmail.com\n\n\n\nFoto: Emil Fagander",
     "crumbs": [
-      "<span class='chapter-number'>13</span>  <span class='chapter-title'>Kontakta oss</span>"
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>Kontakta oss</span>"
     ]
   }
 ]

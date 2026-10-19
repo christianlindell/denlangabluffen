@@ -1,0 +1,219 @@
+---
+title: "Karta: andel sysselsatta i varje stadsdel"
+lang: sv
+execute:
+  echo: false
+  warning: false
+  message: false
+  # Resultatet sparas i _freeze, så att boken kan byggas om utan kartdatan så länge
+  # kapitlet inte ändras
+  freeze: auto
+---
+
+```{r}
+#| label: las-in-data
+# Kartan ritas med funcVGRD3::func_d3_karta(), som i presentationen
+# R_claude/Integrationsforum/foredrag_integrationsforum_v1_riket.qmd. Geometrin och den
+# sekretessrensade statistiken hämtas från projektet regso_karta (kartorna skapas av
+# forbered_kartor.R och datan av uppdatera_data.R där).
+library(sf)
+library(arrow)
+library(dplyr)
+library(funcVGRD3)
+
+# regso_karta söks uppåt i katalogträdet från bokens mapp
+regso_mapp <- NULL
+for (upp in 0:5) {
+  kandidat <- file.path(do.call(file.path, as.list(c(".", rep("..", upp)))), "regso_karta")
+  if (dir.exists(kandidat)) { regso_mapp <- kandidat; break }
+}
+if (is.null(regso_mapp)) stop("Hittar inte projektet regso_karta ovanför ", getwd())
+
+regso_geo  <- st_read(file.path(regso_mapp, "karta", "regso_forenklad.gpkg"), quiet = TRUE)
+kommun_geo <- st_read(file.path(regso_mapp, "karta", "kommuner_fran_regso.gpkg"), quiet = TRUE)
+
+statistik <- read_parquet(file.path(regso_mapp, "data", "dfstudsys_sekretess.parquet")) |>
+  filter(!is.na(RegSOkod_2025)) |>
+  transmute(regsokod      = RegSOkod_2025,
+            ar,
+            sys_andel     = round(100 * sys_andel, 1),
+            sys_antal,
+            bef2064,
+            stud_andel    = round(100 * stud_andel, 1),
+            studentomrade = `studentområde`)
+
+# En rad per RegSO och år; geometrin skickas bara en gång per område (geom_id_column).
+# Kommunen står i namnet, eftersom flera områden heter likadant (t.ex. tre "Haga")
+regso_ar <- regso_geo |>
+  select(regsokod, regsonamn, kommunkod) |>
+  left_join(st_drop_geometry(kommun_geo), by = "kommunkod") |>
+  mutate(namn = paste0(regsonamn, " (", kommunnamn, ")")) |>
+  inner_join(statistik, by = "regsokod", relationship = "one-to-many") |>
+  mutate(etikett = if_else(is.na(sys_andel), NA_character_, paste0(round(sys_andel), " %")))
+
+forsta_ar <- min(regso_ar$ar)
+sista_ar  <- max(regso_ar$ar)
+```
+
+Kartan visar andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren `r forsta_ar`–`r sista_ar`. Ju mörkare blå färg, desto högre andel sysselsatta. Så här använder du kartan:
+
+-   **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
+-   **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
+-   **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
+-   **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
+-   **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)".
+-   **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
+
+Rutan längst ned till vänster summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.
+
+::: {#regso-karta .column-page}
+```{r}
+#| label: karta
+func_d3_karta(
+  regso_ar,
+  df_value                = "sys_andel",
+  geom_col                = "geom",
+  time_column             = "ar",
+  time_default            = forsta_ar,   # kartan öppnar på första året; ▶ spelar upp framåt
+  geom_id_column          = "regsokod",
+  geom_simplify_tolerance = NULL,   # underlaget är redan förenklat i forbered_kartor.R
+  tooltip_name_column     = "namn",
+  tooltip_columns         = c("Antal sysselsatta"     = "sys_antal",
+                              "Befolkning 20–64 år"   = "bef2064",
+                              "Andel studerande (%)"  = "stud_andel",
+                              "Studentområde"         = "studentomrade"),
+  tooltip_unit            = " %",
+  # Förändringen mellan två andelar är i procentenheter, inte procent
+  tooltip_unit_change     = " procentenheter",
+  legend_title_change     = "Förändring (procentenheter)",
+  # Egna klassgränser för förändringen: de flesta områden har ändrats mellan -5 och +10
+  # procentenheter sedan 2005, med några få extremvärden. Röd skala för minskning.
+  breaks_custom_change    = c(-5, -2, 0, 2, 5, 10),
+  color_negative          = "#b2182b",
+  tooltip_decimals        = 1,
+  breaks_method           = "custom",
+  breaks_custom           = seq(50, 90, 5),
+  color                   = "#0d366b",
+  color_low               = "#cde2fb",
+  data_color_line         = "white",
+  overlay                 = kommun_geo,
+  overlay_color           = "#000000",
+  overlay_line_size       = 0.4,
+  # Etiketter med andelen visas när man zoomat in så långt att de flesta inte krockar
+  data_label_show         = TRUE,
+  data_label_column       = "etikett",
+  data_label_zoom         = TRUE,
+  data_label_zoom_overlap = 0.1,
+  data_label_box          = FALSE,
+  data_label_text_color   = "auto",
+  data_label_text_size    = 2.9,
+  legend_position         = "left",
+  legend_title            = "Andel sysselsatta (%)",
+  animation_play_interval = 1200,
+  # Ingen färgövergång vid årsbyte: med övergång ritas alla ~3 300 områden om i varje
+  # bildruta, vilket gör uppspelningen ryckig och får textrutan att halka efter färgerna
+  animation_duration      = 0,
+  width                   = 1100,
+  height                  = 760
+)
+```
+
+```{r}
+#| label: karta-invanare
+#| results: asis
+# Befolkningen 20–64 år och antalet sysselsatta per område och år, [bef, sys], till textrutan
+# nedan. Områden där befolkningen inte redovisas (färre än 5 personer) saknas och räknas som 0;
+# sys är null där antalet sysselsatta inte redovisas.
+bef_json <- regso_ar |>
+  st_drop_geometry() |>
+  filter(!is.na(bef2064)) |>
+  split(~ar) |>
+  lapply(function(d) setNames(Map(c, d$bef2064, d$sys_antal), d$regsokod)) |>
+  jsonlite::toJSON(auto_unbox = TRUE, na = "null")
+cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
+```
+
+```{=html}
+<!-- Textruta med antalet invånare 20–64 år och andelen sysselsatta i de områden som helt syns i
+     kartytan och som inte är avmarkerade i teckenförklaringen. func_d3_karta exponerar inte sitt
+     tillstånd, så skriptet läser det ur kartans SVG: zoomen ur d3.zoomTransform, dolda klasser
+     ur fill-opacity (0.12 för avmarkerade klasser) och året ur texten vid tidsreglaget. Det
+     räknar om direkt när året byts (en MutationObserver på årtexten) och fyra gånger i sekunden
+     medan kartan syns på skärmen, vilket täcker zoom och klick i teckenförklaringen. Alla värden
+     skrivs i samma uppdatering, så de byts alltid samtidigt. Till skillnad från presentationen
+     finns inga reveal-bilder: kartan hittas i blocket #regso-karta. -->
+<style>
+/* Kartan krymper till sidans bredd på mindre skärmar (SVG:n har en viewBox, så innehållet skalas;
+   rutans beräkningar använder SVG:ns egna koordinater och påverkas inte) */
+#regso-karta .vgr-d3-container { width: auto !important; max-width: 1100px; }
+#regso-karta svg.vgr-d3-svg { width: 100%; height: auto; }
+.invanare-ruta { position: absolute; left: 0; bottom: 4px; width: 215px; padding: 5px 7px;
+  background: #fff; border: 1px solid #cfd8dc; border-radius: 6px; pointer-events: none;
+  font-family: Verdana, sans-serif; font-size: 11px; line-height: 1.5; color: #37474F; }
+.invanare-ruta .tal { font-size: 13px; font-weight: bold; color: #0d366b; white-space: nowrap; }
+</style>
+<script>
+(function () {
+  var bef = JSON.parse(document.getElementById("bef-regso").textContent);
+  var ruta = null, bbox = {}, senaste = null, arVakt = null;
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function syns(el) {
+    var r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < window.innerHeight && r.width > 0;
+  }
+
+  function rakna() {
+    var cont = document.querySelector("#regso-karta .vgr-d3-container");
+    if (!cont || !syns(cont)) return;
+    var svg = cont.querySelector("svg.vgr-d3-svg");
+    var yta = svg && svg.querySelector("svg.vgr-map-area");
+    var arText = cont.querySelector(".vgr-year");
+    if (!yta || !arText) return;   // kartan är inte ritad än
+    if (!ruta) {
+      cont.style.position = "relative";
+      ruta = document.createElement("div");
+      ruta.className = "invanare-ruta";
+      cont.appendChild(ruta);
+    }
+    // Räkna om så fort årtexten ändras (byte av år, uppspelning), inte först vid nästa intervall
+    if (!arVakt) {
+      arVakt = new MutationObserver(rakna);
+      arVakt.observe(arText, { childList: true, characterData: true, subtree: true });
+    }
+    // Kartytan; i förändringsläget är årtexten "2005–2024" och befolkningen gäller slutåret
+    var x0 = +yta.getAttribute("x"), y0 = +yta.getAttribute("y");
+    var x1 = x0 + +yta.getAttribute("width"), y1 = y0 + +yta.getAttribute("height");
+    var ar = arText.textContent.slice(-4), befAr = bef[ar] || {};
+    var t = d3.zoomTransform(svg), tol = 0.5;
+    // Dataregionerna ligger i den andra gruppen i zoomgruppen (efter bakgrundskartan)
+    var dataG = yta.querySelector(":scope > g").querySelectorAll(":scope > g")[1];
+    var summa = 0, antal = 0, sys = 0, befMedSys = 0;
+    dataG.querySelectorAll("path").forEach(function (p) {
+      if (parseFloat(p.getAttribute("fill-opacity")) < 0.2) return;   // avmarkerad klass
+      var id = p.__data__ && p.__data__.id;
+      var b = bbox[id];
+      if (!b) { b = p.getBBox(); if (b.width > 0) bbox[id] = b; }
+      if (b.x * t.k + t.x < x0 - tol || (b.x + b.width) * t.k + t.x > x1 + tol ||
+          b.y * t.k + t.y < y0 - tol || (b.y + b.height) * t.k + t.y > y1 + tol) return;
+      antal++;
+      var v = befAr[id];
+      if (!v) return;
+      summa += v[0];
+      // Andelen räknas bara på områden där även antalet sysselsatta redovisas
+      if (v[1] != null) { sys += v[1]; befMedSys += v[0]; }
+    });
+    var andel = befMedSys ? (100 * sys / befMedSys).toFixed(1).replace(".", ",") + " %" : "–";
+    var nyckel = ar + "|" + antal + "|" + summa + "|" + andel;
+    if (nyckel === senaste) return;
+    senaste = nyckel;
+    ruta.innerHTML = "Områdena som visas, " + ar + ":<br>Invånare 20–64 år: <span class='tal'>" +
+      fmt(summa) + "</span><br>Sysselsatta: <span class='tal'>" + andel + "</span><br>" +
+      fmt(antal) + (antal === 1 ? " område" : " områden");
+  }
+  setInterval(rakna, 250);
+})();
+</script>
+```
+:::
+
+Källa: SCB, RegSO 2025 (geometri) samt sysselsättnings-, studerande- och befolkningsstatistik per RegSO. Befolkningen redovisas inte när den understiger 5 personer, och antalet sysselsatta inte när antalet, eller antalet i befolkningen som inte ingår i gruppen, understiger 5 personer. Studentområden är områden där mer än 40 % var studerande 2023.
