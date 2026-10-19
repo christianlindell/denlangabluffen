@@ -1,5 +1,5 @@
 ---
-title: "Karta: andel sysselsatta i varje stadsdel"
+title: "Se hur arbetmarknaden utvecklats i ditt eget bostadsområde"
 lang: sv
 execute:
   echo: false
@@ -55,18 +55,24 @@ forsta_ar <- min(regso_ar$ar)
 sista_ar  <- max(regso_ar$ar)
 ```
 
-Kartan visar andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren `r forsta_ar`–`r sista_ar`. Ju mörkare blå färg, desto högre andel sysselsatta. Så här använder du kartan:
+Antalet personer som bor i områden med låg andel förvärvsarbetande har under lång tid minskat kraftigt, men särskilt snabb har nedgången varit efter pandemin. Om vi sätter en gräns vid att mindre än 60 procent av invånarna mellan 20-64 år får arbeta så bodde 397 000 invånare mellan 20-64 år i sådan områden år 2005. År 2024 hade antalet minskat till 156 000.
 
--   **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
--   **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
--   **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
--   **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
--   **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)".
--   **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
+Tar vi Göteborg som exempel fanns det 2005 totalt 35 områden (stadsdelar) där mindre än 60 procent av befolkningen mellan 20-64 år arbetade. I dessa områden bodde 57 000 invånare i arbetsför ålder. 2024 fanns det 6 områden med knappt 11 000 invånare. Av dessa områden var 3 studentbostadsområden, vilka stod för nästan hälften av antalet invånare. Nedgången är inte unik för Göteborg utan kan ses i alla större städer. Det innebär naturligtvis inte att det inte finns andra problem som kan vara kopplade till utbildningresultat, kriminalitet och andra typer av utanförskap. Men det är tveklöst att integrationen på arbetsmarknaden har ökat mycket kraftigt under lång tid.
+
+Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren `r forsta_ar`–`r sista_ar`. Ju mörkare blå färg, desto högre andel sysselsatta. Så här använder du kartan:
+
+- **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
+- **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
+- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
+- **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
+- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)".
+- **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
 
 Rutan längst ned till vänster summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar rutan alltså stadens siffror.
 
-::: {#regso-karta .column-page}
+<!-- Kartan breder bara ut sig åt höger (column-body-outset-right). Med column-page fälls
+     bokens innehållsförteckning till vänster ihop, eftersom kartan annars skulle täcka den. -->
+::: {#regso-karta .column-body-outset-right}
 ```{r}
 #| label: karta
 func_d3_karta(
