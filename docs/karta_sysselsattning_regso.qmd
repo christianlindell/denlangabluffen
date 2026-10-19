@@ -1,5 +1,5 @@
 ---
-title: "Se hur arbetmarknaden utvecklats i ditt eget bostadsområde"
+title: "Se hur arbetsmarknaden utvecklats i ditt eget bostadsområde"
 lang: sv
 execute:
   echo: false
