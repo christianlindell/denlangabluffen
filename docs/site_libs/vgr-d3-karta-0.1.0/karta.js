@@ -159,6 +159,10 @@
   }
 
   vgrD3.renderers.karta = function (el, spec) {
+    // Geometrin kan ligga i ett eget block som flera kartor delar på (vgrD3.resolveGeo)
+    spec.geo = vgrD3.resolveGeo(spec.geo);
+    spec.basemap = vgrD3.resolveGeo(spec.basemap);
+    if (spec.overlay) spec.overlay.geo = vgrD3.resolveGeo(spec.overlay.geo);
     if (spec.compact) expandCompact(spec);
     var W0 = spec.width, W = spec.width, H = spec.height, font = spec.font;
     // Responsiv layout (spec.responsive): får kartan inte plats i width ritas den i den bredd
@@ -166,15 +170,46 @@
     // storlek. Under brytpunkten (t.ex. mobil) flyttas en förklaring till vänster eller höger
     // under kartan, så att kartan får hela bredden, och kartan blir högre än proportionellt.
     var RS = spec.responsive || {};
+    // Storleksändring (spec.resize): användaren drar i kartans nedre högra hörn. Den dragna
+    // storleken sparas på elementet (el.__vgrStorlek) och gäller vid varje omritning, tills
+    // den återställs med dubbelklick på handtaget eller med Återställ.
+    var RZ = spec.resize || {};
+    var dragen = RZ.enabled ? el.__vgrStorlek || null : null;
     var smal = false;
-    if (RS.enabled) {
-      // Vid omritning mäts bredden innan det gamla innehållet tas bort (se ResizeObserver nedan)
-      var avail = spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el));
-      if (avail > 0 && avail < W0) {
-        smal = avail < RS.breakpoint;
-        H = smal ? Math.min(H, Math.round(Math.max(H * avail / W0, avail * 1.35))) : Math.round(H * avail / W0);
-        W = avail;
-        if (smal && (spec.legend.position === "left" || spec.legend.position === "right")) spec.legend.position = "bottom";
+    // Beskärning (resize_keep_scale): kartan behåller skalan från storleken utan dragning, och
+    // rutan visar ett större eller mindre utsnitt med övre vänstra hörnet kvar. beskar = hur
+    // mycket bredare och högre rutan är än storleken utan dragning.
+    var beskar = null;
+    if (dragen && !RZ.keep_scale) {
+      W = dragen.w;
+      H = dragen.h;
+      // Responsivt: blir sidan smalare än den dragna bredden krymper kartan, med höjden i samma proportion
+      var availD = RS.enabled ? (spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el))) : 0;
+      if (availD > 0 && availD < W) {
+        H = Math.round(H * availD / W);
+        W = availD;
+      }
+      smal = RS.enabled && W < RS.breakpoint;
+      if (smal && (spec.legend.position === "left" || spec.legend.position === "right")) spec.legend.position = "bottom";
+    } else {
+      if (RS.enabled) {
+        // Vid omritning mäts bredden innan det gamla innehållet tas bort (se ResizeObserver nedan)
+        var avail = spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el));
+        if (avail > 0 && avail < W0) {
+          smal = avail < RS.breakpoint;
+          H = smal ? Math.min(H, Math.round(Math.max(H * avail / W0, avail * 1.35))) : Math.round(H * avail / W0);
+          W = avail;
+          if (smal && (spec.legend.position === "left" || spec.legend.position === "right")) spec.legend.position = "bottom";
+        }
+      }
+      if (dragen) {
+        var basW = W, basH = H;
+        W = dragen.w;
+        H = dragen.h;
+        // Rutan blir aldrig bredare än den bredd som finns; höjden behålls
+        var availK = RS.enabled ? (spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el))) : 0;
+        if (availK > 0 && availK < W) W = availK;
+        beskar = { dW: W - basW, dH: H - basH };
       }
     }
     var dur = spec.animation.duration || 0;
@@ -302,8 +337,12 @@
     var feats = spec.geo.features.map(function (f) { f.id = String(f.properties.id); return f; });
     var fitFeatures = feats.slice();
     if (spec.basemap && spec.basemap_fit) fitFeatures = fitFeatures.concat(spec.basemap.features);
+    // Med beskärning anpassas kartan till ytan utan dragning (samma skala och läge som innan man
+    // drog), och den dragna rutan visar mer eller mindre runt den
+    var bdW = beskar ? beskar.dW : 0, bdH = beskar ? beskar.dH : 0;
+    var fitExt = { x0: mapExt.x0, y0: mapExt.y0, x1: mapExt.x1 - bdW, y1: mapExt.y1 - bdH };
     var proj = d3.geoIdentity().reflectY(true)
-      .fitExtent([[mapExt.x0, mapExt.y0], [mapExt.x1, mapExt.y1]], { type: "FeatureCollection", features: fitFeatures });
+      .fitExtent([[fitExt.x0, fitExt.y0], [fitExt.x1, fitExt.y1]], { type: "FeatureCollection", features: fitFeatures });
     var path = d3.geoPath(proj);
 
     // fitExtent centrerar kartan i ytan; begränsas den av höjden (eller bredden) blir det ett glapp
@@ -313,7 +352,7 @@
     // är allt som ritas (data, bakgrundskarta även utan basemap_fit, överlager) — fyller bakgrundskartan
     // ytan finns inget tomt att ta bort. Årsstämpeln ligger i övre vänstra hörnet av ytan: med legend till
     // vänster eller överst ligger legenden kvar där den låg, annars hamnar stämpeln på kartan.
-    var extW0 = ext.x1 - ext.x0;   // årsstämpelns storlek räknas på ytan före krympningen
+    var extW0 = ext.x1 - ext.x0 - bdW;   // årsstämpelns storlek räknas på ytan före krympningen (och utan dragning)
     var legendShift = { x: 0, y: 0, near: false };
     var drawn = feats.concat(spec.basemap ? spec.basemap.features : [], spec.overlay ? spec.overlay.geo.features : []);
     var stampInWay = spec.time.enabled && spec.time.label_show && (L.position === "left" || L.position === "top");
@@ -321,8 +360,8 @@
       var mb = path.bounds({ type: "FeatureCollection", features: drawn });
       if (isFinite(mb[0][0]) && isFinite(mb[1][0])) {
         legendShift.near = true;
-        var slackX = Math.max(0, (ext.x1 - ext.x0) - (mb[1][0] - mb[0][0]));
-        var slackY = Math.max(0, (ext.y1 - ext.y0) - (mb[1][1] - mb[0][1]));
+        var slackX = Math.max(0, (ext.x1 - ext.x0 - bdW) - (mb[1][0] - mb[0][0]));
+        var slackY = Math.max(0, (ext.y1 - ext.y0 - bdH) - (mb[1][1] - mb[0][1]));
         if (L.position === "right") legendShift.x = -slackX / 2;
         if (L.position === "left") legendShift.x = slackX / 2;
         if (L.position === "top") legendShift.y = slackY / 2;
@@ -420,7 +459,7 @@
       tipId = d.id;
       hlPath.attr("d", path(d));
       var a = anchorPx(d.id, false);
-      if (a) tip.showAt(tooltipHtml(d.id), a[0], a[1] + svg.node().offsetTop);
+      if (a) { var sl = svgLage(); tip.showAt(tooltipHtml(d.id), a[0] + sl[0], a[1] + sl[1]); }
     }
     // Tryck utanför områdena: stänger en öppen popup på pekskärm, annars återställs zoomen
     function closeTouchTip() {
@@ -800,10 +839,13 @@
       if (L.position === "none") return;
       var lay = legendLayout(state.mode), ms = M();
       var lx, ly;
-      if (L.position === "right") { lx = box.x1 - legendW; ly = (ext.y0 + ext.y1) / 2 - lay.h / 2; }
-      else if (L.position === "left") { lx = box.x0; ly = (ext.y0 + ext.y1) / 2 - lay.h / 2; }
+      // Med beskärning centreras legenden i höjdled på ytan utan dragning, så att den står kvar
+      if (L.position === "right") { lx = box.x1 - legendW; ly = (ext.y0 + ext.y1 - bdH) / 2 - lay.h / 2; }
+      else if (L.position === "left") { lx = box.x0; ly = (ext.y0 + ext.y1 - bdH) / 2 - lay.h / 2; }
       else if (L.position === "top") { lx = (box.x0 + box.x1) / 2 - lay.w / 2; ly = contentTop; }
       else { lx = (box.x0 + box.x1) / 2 - lay.w / 2; ly = ext.y1 + gap; }
+      // ... men inom rutan när den dragits lägre
+      if (beskar && (L.position === "left" || L.position === "right")) ly = Math.max(ext.y0, Math.min(ly, ext.y1 - lay.h));
       lx += legendShift.x; ly += legendShift.y;
       // Vänster: legendens högra kant (utan de 6 px luft som lay.w har) mot kartan, som höger legends vänstra
       if (L.position === "left" && legendShift.near) lx += legendW - lay.w + 6;
@@ -860,7 +902,7 @@
     // -------------------------------------------------------------------------
     // Största zoom: så att även det minsta området kan fylla 85 % av kartytan (som klick-zoom
     // gör), minst 20 gånger och högst 1 000 gånger.
-    var ew0 = ext.x1 - ext.x0, eh0 = ext.y1 - ext.y0;
+    var ew0 = ext.x1 - ext.x0 - bdW, eh0 = ext.y1 - ext.y0 - bdH;   // ytan utan dragning
     var maxZoom = 20;
     feats.forEach(function (f) {
       var b = path.bounds(f), s = Math.max((b[1][0] - b[0][0]) / ew0, (b[1][1] - b[0][1]) / eh0);
@@ -871,7 +913,11 @@
     var zoom = d3.zoom()
       .scaleExtent([1, maxZoom])
       .extent([[ext.x0, ext.y0], [ext.x1, ext.y1]])
-      .translateExtent([[ext.x0, ext.y0], [ext.x1, ext.y1]])
+      // Med beskärning går det att panorera över hela kartan, även den del som ligger utanför en
+      // mindre ruta
+      .translateExtent(beskar ? [[Math.min(ext.x0, fitExt.x0), Math.min(ext.y0, fitExt.y0)],
+                                 [Math.max(ext.x1, fitExt.x1), Math.max(ext.y1, fitExt.y1)]]
+                              : [[ext.x0, ext.y0], [ext.x1, ext.y1]])
       // Dubbelt så stora steg per hjulklick som d3:s standard, så att man når långt in utan att
       // behöva rulla länge
       .wheelDelta(function (event) {
@@ -1143,7 +1189,12 @@
         input.node().focus();
       });
     }
-    if (IA.zoom) vgrD3.button(controls, "Återställ", resetZoom, "Återställ zoom och markering");
+    // Återställ nollställer även en dragen storlek (ritar om kartan i width × height)
+    if (IA.zoom || RZ.enabled) {
+      vgrD3.button(controls, "Återställ", function () {
+        if (dragen) aterstallStorlek(); else if (IA.zoom) resetZoom();
+      }, RZ.enabled ? (IA.zoom ? "Återställ zoom, markering och storlek" : "Återställ storleken") : "Återställ zoom och markering");
+    }
     controls.append("span").attr("class", "vgr-spacer");
     if (IA.export) vgrD3.exportButtons(controls, svg.node(), fileName);
     if (controls.selectAll("button,input").empty()) controls.remove();
@@ -1161,7 +1212,7 @@
         if (f) hlPath.attr("d", path(f));
         var a = anchorPx(id, false);
         tipId = id;
-        if (TT.show && a) tip.showAt(tooltipHtml(id), a[0], a[1] + svg.node().offsetTop);
+        if (TT.show && a) { var sl = svgLage(); tip.showAt(tooltipHtml(id), a[0] + sl[0], a[1] + sl[1]); }
       }, (IA.zoom ? dur : 0) + 30);
     }
 
@@ -1180,45 +1231,168 @@
     update(false);
     positionUnscaled();
 
+    // Zoomen från före en omritning: samma zoomfaktor och samma punkt (i kartans koordinater) i
+    // ytans mitt, eller med beskärning i ytans övre vänstra hörn (som ligger kvar när man drar)
+    if (IA.zoom && behall && behall.view) {
+      var hornet = RZ.keep_scale && behall.view.corner;
+      var vp = proj(hornet ? behall.view.corner : behall.view.center);
+      if (vp && isFinite(vp[0]) && isFinite(vp[1])) {
+        var vk = Math.max(1, Math.min(maxZoom, behall.view.k));
+        var ank = hornet ? [ext.x0, ext.y0] : [(ext.x0 + ext.x1) / 2, (ext.y0 + ext.y1) / 2];
+        svg.call(zoom.transform, d3.zoomIdentity.translate(ank[0], ank[1]).scale(vk).translate(-vp[0], -vp[1]));
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    //  Omritning (ny bredd eller dragen storlek)
+    // -------------------------------------------------------------------------
+    // Spec:en läses om från sidan, eftersom den packas upp i expandCompact, och läge, år,
+    // startår, dolda klasser och zoom följer med. availW: bredden som finns (mäts av den som
+    // anropar). utanVy: zoomen börjar om (Återställ).
+    function ritaOm(availW, utanVy) {
+      var specEl = document.getElementById(el.id + "-spec");
+      if (!specEl) return;
+      if (el.__vgrResize) el.__vgrResize.disconnect();
+      stopPlay();
+      var ny = JSON.parse(specEl.textContent);
+      if (availW) ny.avail_width = availW;
+      var t = state.transform, c = t.invert([(ext.x0 + ext.x1) / 2, (ext.y0 + ext.y1) / 2]);
+      var flyttad = t.k > 1.001 || Math.abs(t.x) > 0.5 || Math.abs(t.y) > 0.5;
+      var vy = !utanVy && flyttad ? { center: proj.invert(c), corner: proj.invert(t.invert([ext.x0, ext.y0])), k: t.k } : null;
+      el.__vgrForra = { bredd: W, tid: Date.now() };
+      // Höjden hålls under omritningen. Annars kan sidan bli kortare när innehållet tas bort, så
+      // att rullningslisten försvinner, bredden ändras och kartan ritas om i en evig loop.
+      el.style.minHeight = el.offsetHeight + "px";
+      ny.default_mode = state.mode;
+      ny.default_year = state.year;
+      ny.keep_state = {
+        from_year: state.mode === "forandring" && modes.forandring ? modes.forandring.from_year : null,
+        hidden: state.hidden,
+        view: vy
+      };
+      d3.select(el).selectAll("*").remove();
+      el.style.width = "";
+      vgrD3.renderers.karta(el, ny);
+      el.style.minHeight = "";
+    }
+
+    function aterstallStorlek() {
+      el.__vgrStorlek = null;
+      ritaOm(RS.enabled ? Math.floor(availableWidth(el)) : null, true);
+    }
+
+    // Kartans skalning på skärmen, t.ex. när reveal.js förstorar bilden: skärmpixlar per pixel i kartan
+    function skala() {
+      var r = el.getBoundingClientRect();
+      return el.offsetWidth ? (r.width / el.offsetWidth) || 1 : 1;
+    }
+
+    // SVG:ns läge i behållaren, i kartans egna pixlar. SVG-element saknar offsetLeft/offsetTop, så
+    // läget mäts på skärmen och räknas om med skalningen.
+    function svgLage() {
+      var er = el.getBoundingClientRect(), sr = svg.node().getBoundingClientRect(), s = skala();
+      return [(sr.left - er.left) / s, (sr.top - er.top) / s];
+    }
+
+    // Största höjd i en reveal.js-presentation: kartan får inte gå nedanför bildytan
+    function maxHojdIBild() {
+      var bild = el.closest ? el.closest(".reveal .slides") : null;
+      if (!bild || !bild.clientHeight) return Infinity;
+      var topp = (svg.node().getBoundingClientRect().top - bild.getBoundingClientRect().top) / skala();
+      return Math.max(0, Math.floor(bild.clientHeight - topp - 4));
+    }
+
+    // -------------------------------------------------------------------------
+    //  Draghandtag (interactive_resize)
+    // -------------------------------------------------------------------------
+    // Medan man drar visar en streckad ram den nya storleken (och utan beskärning skalas kartan om
+    // med viewBox). Kartan ritas om först när man släpper, eftersom omritningen tar tid med många
+    // områden. Med beskärning (resize_keep_scale) behåller kartan sin skala och rutan visar ett
+    // annat utsnitt; annars ritas kartan om i den nya storleken.
+    if (RZ.enabled) {
+      var minW = RZ.min ? RZ.min[0] : 300, minH = RZ.min ? RZ.min[1] : 250;
+      var handtag = d3.select(el).append("div").attr("class", "vgr-d3-resize")
+        .attr("title", "Dra för att ändra kartans storlek. Dubbelklicka för att återställa.")
+        .attr("role", "separator").attr("aria-label", "Ändra kartans storlek")
+        // reveal.js tolkar annars dragningen som en svepning till nästa bild
+        .attr("data-prevent-swipe", "");
+      var drag = null;
+      handtag.on("pointerdown", function (event) {
+        if (event.button != null && event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        tip.hide();
+        var maxW = RZ.max ? RZ.max[0] : Infinity, maxH = RZ.max ? RZ.max[1] : Infinity;
+        var b = Math.floor(availableWidth(el));
+        if (b > 0) maxW = Math.min(maxW, b);
+        maxH = Math.min(maxH, maxHojdIBild());
+        var sl = svgLage();
+        drag = {
+          id: event.pointerId, x: event.clientX, y: event.clientY, s: skala(), w: W, h: H,
+          minW: Math.min(minW, maxW), maxW: maxW, minH: Math.min(minH, maxH), maxH: maxH,
+          ram: d3.select(el).append("div").attr("class", "vgr-d3-resize-frame")
+            .style("left", sl[0] + "px").style("top", sl[1] + "px")
+            .style("width", W + "px").style("height", H + "px")
+        };
+        // Kartan skalas fritt medan man drar (max-width från responsive skulle annars låsa bredden)
+        svg.style("max-width", null);
+        root.style("max-width", null);
+        if (this.setPointerCapture) this.setPointerCapture(event.pointerId);
+      });
+      handtag.on("pointermove", function (event) {
+        if (!drag || event.pointerId !== drag.id) return;
+        var w = Math.round(Math.max(drag.minW, Math.min(drag.maxW, drag.w + (event.clientX - drag.x) / drag.s)));
+        var h = Math.round(Math.max(drag.minH, Math.min(drag.maxH, drag.h + (event.clientY - drag.y) / drag.s)));
+        drag.nyW = w; drag.nyH = h;
+        drag.ram.style("width", w + "px").style("height", h + "px");
+        // Utan beskärning skalas kartan om medan man drar; med beskärning visar bara ramen den nya rutan
+        if (!RZ.keep_scale) {
+          root.style("width", Math.max(w, W) + "px");
+          svg.style("width", w + "px").style("height", h + "px");
+        }
+      });
+      function slutaDra(event) {
+        if (!drag || event.pointerId !== drag.id) return;
+        var d = drag;
+        drag = null;
+        d.ram.remove();
+        if (d.nyW == null || (Math.abs(d.nyW - W) < 2 && Math.abs(d.nyH - H) < 2)) {
+          // Ingen ändring: kartan tillbaka till sin storlek
+          root.style("width", W + "px").style("max-width", RS.enabled ? "100%" : null);
+          svg.style("width", null).style("height", RS.enabled ? "auto" : null).style("max-width", RS.enabled ? "100%" : null);
+          return;
+        }
+        el.__vgrStorlek = { w: d.nyW, h: d.nyH };
+        ritaOm(RS.enabled ? Math.floor(availableWidth(el)) : null);
+      }
+      handtag.on("pointerup", slutaDra).on("pointercancel", slutaDra);
+      handtag.on("dblclick", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (dragen) aterstallStorlek();
+      });
+    }
+
     // Responsiv layout: rita om kartan när den tillgängliga bredden ändras (fönstret ändrar
-    // storlek, mobilen vänds). Spec:en läses om från sidan, eftersom den packas upp i
-    // expandCompact, och läge, år, startår och dolda klasser följer med. Zoomen börjar om.
+    // storlek, mobilen vänds). Med en dragen storlek är den dragna bredden största bredden.
     if (RS.enabled && typeof ResizeObserver !== "undefined" && el.parentNode) {
       if (el.__vgrResize) el.__vgrResize.disconnect();
       var omritning = null;
+      var malW = dragen ? dragen.w : W0;
       var ro = new ResizeObserver(function () {
         var b = Math.floor(availableWidth(el));
         if (!b) return;   // dold (t.ex. en reveal.js-bild som inte visas)
-        if (Math.abs(Math.min(W0, b) - W) < 2) return;
+        if (Math.abs(Math.min(malW, b) - W) < 2) return;
         // Tillbaka till bredden före förra omritningen strax efter den: den nya kartans höjd har
         // troligen tagit fram eller tagit bort rullningslisten. Rita inte om igen (ingen pendling).
         var f = el.__vgrForra;
-        if (f && Math.abs(Math.min(W0, b) - f.bredd) < 2 && Date.now() - f.tid < 1500) return;
+        if (f && Math.abs(Math.min(malW, b) - f.bredd) < 2 && Date.now() - f.tid < 1500) return;
         clearTimeout(omritning);
         omritning = setTimeout(function () {
-          var specEl = document.getElementById(el.id + "-spec");
-          if (!specEl) return;
-          ro.disconnect();
-          stopPlay();
-          var ny = JSON.parse(specEl.textContent);
-          // Bredden mäts medan den gamla kartan finns kvar, och höjden hålls under omritningen.
-          // Annars kan sidan bli kortare när innehållet tas bort, så att rullningslisten försvinner,
-          // bredden ändras och kartan ritas om i en evig loop.
+          // Bredden mäts medan den gamla kartan finns kvar
           var bNu = Math.floor(availableWidth(el));
-          if (!bNu) { ro.observe(el.parentNode); return; }
-          ny.avail_width = bNu;
-          el.__vgrForra = { bredd: W, tid: Date.now() };
-          el.style.minHeight = el.offsetHeight + "px";
-          ny.default_mode = state.mode;
-          ny.default_year = state.year;
-          ny.keep_state = {
-            from_year: state.mode === "forandring" && modes.forandring ? modes.forandring.from_year : null,
-            hidden: state.hidden
-          };
-          d3.select(el).selectAll("*").remove();
-          el.style.width = "";
-          vgrD3.renderers.karta(el, ny);
-          el.style.minHeight = "";
+          if (!bNu) return;
+          ritaOm(bNu);
         }, 200);
       });
       ro.observe(el.parentNode);

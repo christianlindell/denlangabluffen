@@ -2,6 +2,7 @@
  *
  * Varje widget består av en <div id="..."> och en <script type="application/json" id="...-spec">
  * som R har skrivit. vgrD3.render(id) läser spec:en och anropar vgrD3.renderers[spec.typ].
+ * Kartornas geometri kan ligga i egna block (data-vgr-geo) som flera kartor delar på.
  * Allt som ska synas vid export ritas i SVG:en; knappar/reglage ligger i HTML ovanför.
  */
 (function () {
@@ -122,6 +123,12 @@
       "width:14px;height:14px;border-radius:50%;background:#37474F;border:2px solid #fff;box-shadow:0 0 0 1px #37474F;box-sizing:border-box;}",
       ".vgr-d3-controls .vgr-spacer{flex:1;}",
       ".vgr-d3-controls .vgr-year{min-width:44px;font-weight:bold;color:#37474F;}",
+      // Draghandtag för kartans storlek (interactive_resize) och ramen som visas medan man drar
+      ".vgr-d3-resize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;touch-action:none;z-index:6;",
+      "background:linear-gradient(135deg,transparent 0 50%,#78909c 50% 58%,transparent 58% 68%,#78909c 68% 76%,transparent 76% 86%,#78909c 86% 94%,transparent 94%);}",
+      ".vgr-d3-resize:hover{background-color:rgba(236,239,241,.8);}",
+      "@media (pointer:coarse){.vgr-d3-resize{width:28px;height:28px;}}",
+      ".vgr-d3-resize-frame{position:absolute;border:2px dashed #37474F;box-sizing:border-box;pointer-events:none;z-index:5;}",
       ".vgr-d3-tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid #cfd8dc;border-radius:6px;",
       "box-shadow:0 2px 8px rgba(0,0,0,.15);padding:8px 10px;font-size:13px;color:#263238;max-width:340px;z-index:10;transition:opacity .12s;}",
       // Smala skärmar: tooltipen får inte bli bredare än skärmen
@@ -461,6 +468,23 @@
     var s = String(text || "diagram").toLowerCase()
       .replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
     return s.slice(0, 60) || "diagram";
+  };
+
+  // ---------------------------------------------------------------------------
+  //  Delad kartgeometri
+  // ---------------------------------------------------------------------------
+  // Kartornas geometri ligger i egna block (<script type="application/json" data-vgr-geo="...">)
+  // som flera kartor på sidan kan peka på (se func_d3_dela_geometri i R). Ett block tolkas bara
+  // en gång; kartorna läser geometrin men ändrar den inte.
+  var geoBlock = {};
+  vgrD3.resolveGeo = function (g) {
+    if (!g || g.type !== "vgrRef") return g;
+    if (!geoBlock[g.ref]) {
+      var el = document.querySelector('script[data-vgr-geo="' + g.ref + '"]');
+      if (!el) throw new Error("kartans geometri (" + g.ref + ") saknas på sidan");
+      geoBlock[g.ref] = JSON.parse(el.textContent);
+    }
+    return geoBlock[g.ref];
   };
 
   // ---------------------------------------------------------------------------
