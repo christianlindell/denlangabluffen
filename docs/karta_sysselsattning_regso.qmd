@@ -72,7 +72,6 @@ Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regi
 
 Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
 
-Notera att gränspendlare till annat nordiskt land i detta dataset inte kommer med förrän 2022, vilket förklarar den kraftiga sysselsättningstillväxten i kommuner som Malmö, Strömstad och Haparanda 2022.
 
 <!-- Kartan breder bara ut sig åt höger (column-body-outset-right). Med column-page fälls
      bokens innehållsförteckning till vänster ihop, eftersom kartan annars skulle täcka den. -->

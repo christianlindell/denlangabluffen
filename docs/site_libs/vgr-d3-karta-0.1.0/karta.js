@@ -172,21 +172,25 @@
     var RS = spec.responsive || {};
     // Storleksändring (spec.resize): användaren drar i kartans nedre högra hörn. Den dragna
     // storleken sparas på elementet (el.__vgrStorlek) och gäller vid varje omritning, tills
-    // den återställs med dubbelklick på handtaget eller med Återställ.
+    // den återställs med dubbelklick på handtaget eller med Återställ. w är hela bredden och
+    // h kartytans höjd (utan rubriker, legend och bildtext), så att kartan blir så hög som
+    // rutan man drog även när legenden får fler eller färre rader i den nya bredden.
     var RZ = spec.resize || {};
     var dragen = RZ.enabled ? el.__vgrStorlek || null : null;
     var smal = false;
+    // Kartytans höjd från dragningen; hela höjden H räknas fram när legenden är mätt (nedan)
+    var kartH = null;
     // Beskärning (resize_keep_scale): kartan behåller skalan från storleken utan dragning, och
     // rutan visar ett större eller mindre utsnitt med övre vänstra hörnet kvar. beskar = hur
-    // mycket bredare och högre rutan är än storleken utan dragning.
+    // mycket bredare och högre kartytan är än utan dragning.
     var beskar = null;
     if (dragen && !RZ.keep_scale) {
       W = dragen.w;
-      H = dragen.h;
+      kartH = dragen.h;
       // Responsivt: blir sidan smalare än den dragna bredden krymper kartan, med höjden i samma proportion
       var availD = RS.enabled ? (spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el))) : 0;
       if (availD > 0 && availD < W) {
-        H = Math.round(H * availD / W);
+        kartH = Math.round(kartH * availD / W);
         W = availD;
       }
       smal = RS.enabled && W < RS.breakpoint;
@@ -205,11 +209,12 @@
       if (dragen) {
         var basW = W, basH = H;
         W = dragen.w;
-        H = dragen.h;
+        kartH = dragen.h;
         // Rutan blir aldrig bredare än den bredd som finns; höjden behålls
         var availK = RS.enabled ? (spec.avail_width != null ? spec.avail_width : Math.floor(availableWidth(el))) : 0;
         if (availK > 0 && availK < W) W = availK;
-        beskar = { dW: W - basW, dH: H - basH };
+        // dH räknas när legenden är mätt: kartytans höjd nu minus kartytans höjd utan dragning
+        beskar = { dW: W - basW, dH: 0, basW: basW, basH: basH };
       }
     }
     var dur = spec.animation.duration || 0;
@@ -291,7 +296,8 @@
       if (ms.has_na) e.push({ key: -1, label: spec.na_label, color: spec.na_color });
       return e;
     }
-    function legendLayout(mode) {
+    // bredd: diagrammets bredd som legenden ska få plats i (standard: W)
+    function legendLayout(mode, bredd) {
       var ms = modes[mode], entries = legendEntries(mode);
       var tH = ms.legend_title ? L.text_size * 1.6 : 0;
       var tW = ms.legend_title ? vgrD3.measureText(svg, ms.legend_title, L.text_size, font) : 0;
@@ -300,7 +306,7 @@
         entries.forEach(function (e, i) { e.x = 0; e.y = tH + i * rowH; });
         return { entries: entries, w: Math.max(tW, d3.max(widths) || 0) + 6, h: tH + entries.length * rowH };
       }
-      var avail = box.x1 - box.x0, x = 0, y = tH, maxX = 0;
+      var avail = bredd != null ? bredd - m.l - m.r : box.x1 - box.x0, x = 0, y = tH, maxX = 0;
       entries.forEach(function (e, i) {
         var w = widths[i] + 18;
         if (x > 0 && x + w > avail) { x = 0; y += rowH; }
@@ -317,11 +323,32 @@
       });
     }
 
+    // Höjden utanför kartytan i bredden `bredd`: rubriker, bildtext, marginaler och en legend
+    // över eller under kartan (dess radbrytning beror på bredden)
+    function hojdUtanforKartan(bredd) {
+      var lh = 0;
+      if (L.position === "top" || L.position === "bottom") {
+        spec.mode_order.forEach(function (k) { lh = Math.max(lh, legendLayout(k, bredd).h); });
+        lh += gap;
+      }
+      return contentTop + lh + capH + (capH ? 6 : 0) + m.b;
+    }
+    // Dragen storlek: hela höjden = kartytans höjd + det som ligger utanför den
+    if (kartH != null) {
+      H = Math.round(kartH + hojdUtanforKartan(W));
+      if (beskar) beskar.dH = kartH - (beskar.basH - hojdUtanforKartan(beskar.basW));
+      box.y1 = H - m.b;
+      contentBottom = box.y1 - capH - (capH ? 6 : 0);
+      svg.attr("height", H).attr("viewBox", "0 0 " + W + " " + H);
+    }
+
     var ext = { x0: box.x0, y0: contentTop, x1: box.x1, y1: contentBottom };
     if (L.position === "right") ext.x1 -= legendW + gap;
     if (L.position === "left") ext.x0 += legendW + gap;
     if (L.position === "top") ext.y0 += legendH + gap;
     if (L.position === "bottom") ext.y1 -= legendH + gap;
+    // Kartytans höjd innan det tomma runt kartan tas bort nedan; det är den som sparas när man drar
+    var kartHojd = ext.y1 - ext.y0;
 
     // Etiketter utanför kartan: kartan krymps på bredden och etikettkolumner läggs på sidorna
     var mapExt = { x0: ext.x0, y0: ext.y0, x1: ext.x1, y1: ext.y1 };
@@ -1305,10 +1332,12 @@
     // -------------------------------------------------------------------------
     //  Draghandtag (interactive_resize)
     // -------------------------------------------------------------------------
-    // Medan man drar visar en streckad ram den nya storleken (och utan beskärning skalas kartan om
-    // med viewBox). Kartan ritas om först när man släpper, eftersom omritningen tar tid med många
-    // områden. Med beskärning (resize_keep_scale) behåller kartan sin skala och rutan visar ett
-    // annat utsnitt; annars ritas kartan om i den nya storleken.
+    // Handtaget sitter i kartytans nedre högra hörn (inte under legenden eller bildtexten), och
+    // medan man drar visar en streckad ram kartytans nya storlek. Kartan står still medan man
+    // drar och ritas om först när man släpper, eftersom omritningen tar tid med många områden.
+    // Med beskärning (resize_keep_scale) behåller kartan sin skala och rutan visar ett annat
+    // utsnitt; annars ritas kartan om så att den fyller den nya rutan. Rubriker, legend och
+    // bildtext behåller sin storlek. resize_min och resize_max gäller hela diagrammets storlek.
     if (RZ.enabled) {
       var minW = RZ.min ? RZ.min[0] : 300, minH = RZ.min ? RZ.min[1] : 250;
       var handtag = d3.select(el).append("div").attr("class", "vgr-d3-resize")
@@ -1316,40 +1345,61 @@
         .attr("role", "separator").attr("aria-label", "Ändra kartans storlek")
         // reveal.js tolkar annars dragningen som en svepning till nästa bild
         .attr("data-prevent-swipe", "");
+
+      // Kartytan (efter att det tomma runt kartan tagits bort) i behållarens egna pixlar.
+      // SVG:n kan vara nedskalad med viewBox (max-width: 100 %) innan kartan hunnit ritas om.
+      function kartytaIBehallaren() {
+        var sr = svg.node().getBoundingClientRect(), s = skala();
+        if (!sr.width || !W) return null;   // dold, t.ex. en reveal.js-bild som inte visas
+        var f = sr.width / s / W, sl = svgLage();
+        return { x0: sl[0] + ext.x0 * f, y0: sl[1] + ext.y0 * f, x1: sl[0] + ext.x1 * f, y1: sl[1] + ext.y1 * f, f: f };
+      }
+      function placeraHandtag() {
+        var k = kartytaIBehallaren();
+        if (!k) return;   // CSS:en lägger då handtaget i behållarens hörn
+        handtag.style("left", k.x1 + "px").style("top", k.y1 + "px")
+          .style("right", "auto").style("bottom", "auto").style("transform", "translate(-100%,-100%)");
+      }
+      placeraHandtag();
+      // Läget följer med när SVG:n skalas om eller kartan blir synlig
+      if (el.__vgrHandtagRO) el.__vgrHandtagRO.disconnect();
+      if (typeof ResizeObserver !== "undefined") {
+        el.__vgrHandtagRO = new ResizeObserver(function () { if (!drag) placeraHandtag(); });
+        el.__vgrHandtagRO.observe(svg.node());
+      }
+
       var drag = null;
       handtag.on("pointerdown", function (event) {
         if (event.button != null && event.button !== 0) return;
         event.preventDefault();
         event.stopPropagation();
         tip.hide();
+        var k = kartytaIBehallaren();
+        if (!k) return;
         var maxW = RZ.max ? RZ.max[0] : Infinity, maxH = RZ.max ? RZ.max[1] : Infinity;
         var b = Math.floor(availableWidth(el));
         if (b > 0) maxW = Math.min(maxW, b);
         maxH = Math.min(maxH, maxHojdIBild());
-        var sl = svgLage();
         drag = {
-          id: event.pointerId, x: event.clientX, y: event.clientY, s: skala(), w: W, h: H,
+          id: event.pointerId, x: event.clientX, y: event.clientY, s: skala(), k: k,
           minW: Math.min(minW, maxW), maxW: maxW, minH: Math.min(minH, maxH), maxH: maxH,
           ram: d3.select(el).append("div").attr("class", "vgr-d3-resize-frame")
-            .style("left", sl[0] + "px").style("top", sl[1] + "px")
-            .style("width", W + "px").style("height", H + "px")
+            .style("left", k.x0 + "px").style("top", k.y0 + "px")
+            .style("width", (k.x1 - k.x0) + "px").style("height", (k.y1 - k.y0) + "px")
         };
-        // Kartan skalas fritt medan man drar (max-width från responsive skulle annars låsa bredden)
-        svg.style("max-width", null);
-        root.style("max-width", null);
         if (this.setPointerCapture) this.setPointerCapture(event.pointerId);
       });
       handtag.on("pointermove", function (event) {
         if (!drag || event.pointerId !== drag.id) return;
-        var w = Math.round(Math.max(drag.minW, Math.min(drag.maxW, drag.w + (event.clientX - drag.x) / drag.s)));
-        var h = Math.round(Math.max(drag.minH, Math.min(drag.maxH, drag.h + (event.clientY - drag.y) / drag.s)));
+        var k = drag.k;
+        // Hela diagrammets nya storlek (i kartans pixlar), begränsad av resize_min och resize_max
+        var w = Math.round(Math.max(drag.minW, Math.min(drag.maxW, W + (event.clientX - drag.x) / drag.s / k.f)));
+        var h = Math.round(Math.max(drag.minH, Math.min(drag.maxH, H + (event.clientY - drag.y) / drag.s / k.f)));
         drag.nyW = w; drag.nyH = h;
-        drag.ram.style("width", w + "px").style("height", h + "px");
-        // Utan beskärning skalas kartan om medan man drar; med beskärning visar bara ramen den nya rutan
-        if (!RZ.keep_scale) {
-          root.style("width", Math.max(w, W) + "px");
-          svg.style("width", w + "px").style("height", h + "px");
-        }
+        // Ramen visar kartytan: den växer lika mycket som diagrammet, resten behåller sin storlek
+        drag.ram.style("width", Math.max(0, k.x1 - k.x0 + (w - W) * k.f) + "px")
+          .style("height", Math.max(0, k.y1 - k.y0 + (h - H) * k.f) + "px");
+        handtag.style("left", (k.x1 + (w - W) * k.f) + "px").style("top", (k.y1 + (h - H) * k.f) + "px");
       });
       function slutaDra(event) {
         if (!drag || event.pointerId !== drag.id) return;
@@ -1357,12 +1407,11 @@
         drag = null;
         d.ram.remove();
         if (d.nyW == null || (Math.abs(d.nyW - W) < 2 && Math.abs(d.nyH - H) < 2)) {
-          // Ingen ändring: kartan tillbaka till sin storlek
-          root.style("width", W + "px").style("max-width", RS.enabled ? "100%" : null);
-          svg.style("width", null).style("height", RS.enabled ? "auto" : null).style("max-width", RS.enabled ? "100%" : null);
+          placeraHandtag();   // ingen ändring
           return;
         }
-        el.__vgrStorlek = { w: d.nyW, h: d.nyH };
+        // Sparas: hela bredden och kartytans höjd (se dragen ovan)
+        el.__vgrStorlek = { w: d.nyW, h: Math.max(1, Math.round(kartHojd + d.nyH - H)) };
         ritaOm(RS.enabled ? Math.floor(availableWidth(el)) : null);
       }
       handtag.on("pointerup", slutaDra).on("pointercancel", slutaDra);
