@@ -68,9 +68,10 @@ Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regi
 - **På mobil och pekplatta** trycker du på ett område för att se detaljerna och trycker en gång till för att zooma in på det. Nyp för att zooma och dra med ett finger för att flytta kartan.
 - **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
 - **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
+- **Exkludera studentområden** genom att kryssa i rutan till höger i raden under kartan. Som studentområden räknas områden där över 40 procent av de boende 20–64 år var studerande 2023. Där förvärvsarbetar många invånare inte eftersom de studerar. Studentområdena tonas ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
 - **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
 
-Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
+Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
 
 
 <!-- Kartan breder bara ut sig åt höger (column-body-outset-right). Med column-page fälls
@@ -145,6 +146,14 @@ bef_json <- regso_ar |>
   lapply(function(d) setNames(Map(c, d$bef2064, d$sys_antal), d$regsokod)) |>
   jsonlite::toJSON(auto_unbox = TRUE, na = "null")
 cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
+# Studentområdena (samma alla år), till kryssrutan som avmarkerar dem på kartan
+stud_json <- regso_ar |>
+  st_drop_geometry() |>
+  filter(studentomrade == "ja") |>
+  distinct(regsokod) |>
+  pull(regsokod) |>
+  jsonlite::toJSON()
+cat('<script type="application/json" id="stud-regso">', stud_json, '</script>\n')
 ```
 
 ```{=html}
@@ -158,7 +167,9 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
      Alla värden skrivs i samma uppdatering, så de byts alltid samtidigt. Till skillnad från
      presentationen finns inga reveal-bilder: kartan hittas i blocket #regso-karta.
      Sökrutan, pekskärmsstödet, anpassningen till smala skärmar och draghandtaget finns i
-     funcVGRD3. Kartan ritas om när sidans bredd ändras eller när man släpper draghandtaget. -->
+     funcVGRD3. Kartan ritas om när sidans bredd ändras eller när man släpper draghandtaget.
+     Kryssrutan i raden avmarkerar studentområdena på kartan och räknar bort dem (som i
+     R_claude/Integrationsforum/foredrag_integrationsforum_v1_riket_kryssruta.qmd). -->
 <style>
 /* Raden under kartan: ram, ljus bakgrund och blå kant till vänster, så att den skiljer sig från
    bokens övriga text */
@@ -168,15 +179,35 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
   color: #37474F; }
 .invanare-rad .tal { font-weight: bold; color: #0d366b; white-space: nowrap; }
 .invanare-rad .sep { color: #90a4ae; padding: 0 6px; }
+.invanare-rad { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 12px; }
+.invanare-rad label { white-space: nowrap; cursor: pointer; }
+.invanare-rad input { vertical-align: middle; margin: 0 4px 0 0; cursor: pointer; }
+/* Avmarkerade studentområden: samma nedtoning som avmarkerade klasser i teckenförklaringen och
+   ingen etikett. CSS går före kartans fill-opacity-attribut, så det gäller även efter årsbyte och hovring */
+#regso-karta.utan-student path.studentomrade { fill-opacity: 0.12 !important; }
+#regso-karta.utan-student g.studentomrade { display: none; }
 </style>
 <script>
 (function () {
   var bef = JSON.parse(document.getElementById("bef-regso").textContent);
-  var ruta = null, bbox = {}, senaste = null, arVakt = null, kartSvg = null;
+  var stud = {};
+  JSON.parse(document.getElementById("stud-regso").textContent).forEach(function (id) { stud[id] = true; });
+  var ruta = null, rutaText = null, bbox = {}, senaste = null, arVakt = null, kartSvg = null;
+  var utanStudent = false, taggVakt = null;
   function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
   function syns(el) {
     var r = el.getBoundingClientRect();
     return r.bottom > 0 && r.top < window.innerHeight && r.width > 0;
+  }
+
+  // Studentområdenas banor och etiketter får klassen "studentomrade", som CSS:en ovan tonar ned
+  // när kryssrutan är ikryssad. Etiketterna ritas om vid zoom, så taggningen körs vid varje ändring i kartan.
+  function tagga() {
+    if (!kartSvg) return;
+    kartSvg.querySelectorAll("svg.vgr-map-area path, svg.vgr-map-area g").forEach(function (el) {
+      var id = el.__data__ && el.__data__.id;
+      if (id != null && stud[id] && !el.classList.contains("studentomrade")) el.classList.add("studentomrade");
+    });
   }
 
   function rakna() {
@@ -193,12 +224,32 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
       bbox = {};
       senaste = null;
       if (arVakt) { arVakt.disconnect(); arVakt = null; }
+      if (taggVakt) taggVakt.disconnect();
+      taggVakt = new MutationObserver(tagga);
+      taggVakt.observe(svg, { childList: true, subtree: true });
+      tagga();
     }
     // Raden ligger direkt efter kartans behållare, inte i den: då täcker den aldrig kartan,
     // draghandtaget stannar i kartans hörn och raden finns kvar när kartan ritas om
     if (!ruta || !ruta.isConnected) {
       ruta = document.createElement("div");
       ruta.className = "invanare-rad";
+      rutaText = document.createElement("span");
+      // Kryssrutan som avmarkerar studentområdena på kartan och räknar bort dem i raden
+      var etikett = document.createElement("label");
+      var kryss = document.createElement("input");
+      kryss.type = "checkbox";
+      kryss.checked = utanStudent;
+      kryss.addEventListener("change", function () {
+        utanStudent = kryss.checked;
+        document.getElementById("regso-karta").classList.toggle("utan-student", utanStudent);
+        senaste = null;
+        rakna();
+      });
+      etikett.appendChild(kryss);
+      etikett.appendChild(document.createTextNode("Exkludera studentområden"));
+      ruta.appendChild(rutaText);
+      ruta.appendChild(etikett);
       cont.parentNode.insertBefore(ruta, cont.nextSibling);
       senaste = null;
     }
@@ -221,6 +272,7 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
     dataG.querySelectorAll("path").forEach(function (p) {
       if (parseFloat(p.getAttribute("fill-opacity")) < 0.2) return;   // avmarkerad klass
       var id = p.__data__ && p.__data__.id;
+      if (utanStudent && stud[id]) return;   // avmarkerat studentområde
       var b = bbox[id];
       if (!b) { b = p.getBBox(); if (b.width > 0) bbox[id] = b; }
       if (b.x * t.k + t.x < x0 - tol || (b.x + b.width) * t.k + t.x > x1 + tol ||
@@ -236,7 +288,7 @@ cat('<script type="application/json" id="bef-regso">', bef_json, '</script>\n')
     var nyckel = ar + "|" + antal + "|" + summa + "|" + andel;
     if (nyckel === senaste) return;
     senaste = nyckel;
-    ruta.innerHTML = "Områdena som visas, " + ar + ": <span class='tal'>" + fmt(summa) +
+    rutaText.innerHTML = "Områdena som visas, " + ar + ": <span class='tal'>" + fmt(summa) +
       "</span> invånare 20–64 år<span class='sep'>·</span><span class='tal'>" + andel +
       "</span> sysselsatta<span class='sep'>·</span>" + fmt(antal) + (antal === 1 ? " område" : " områden");
   }
