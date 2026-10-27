@@ -73,6 +73,8 @@ Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regi
 
 Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
 
+Notera att gränspendlare till andra nordiska länder ingår i sysselsättningsstatistiken först år 2020. Det innebär att tillväxttakten framstår som för kraftig i kommuner som Malmö, Strömstad och Haparanda, vilka har en stor andel gränspendlare, om man jämför sysselsättningen ett år före 2020 med 2020 eller senare.
+
 
 <!-- Kartan breder bara ut sig åt höger (column-body-outset-right). Med column-page fälls
      bokens innehållsförteckning till vänster ihop, eftersom kartan annars skulle täcka den. -->

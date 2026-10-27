@@ -147,6 +147,16 @@
     spec.tooltip.columns.forEach(function (c) { c.values = column(c, allYears); });
     if (spec.bubbles) spec.bubbles.values = perYear(spec.bubbles.values);
     if (spec.zoom_groups) spec.zoom_groups = byId(spec.zoom_groups);
+    // Summeringsraden: värden per år och id; kryssrutornas områden som { id: true }
+    if (spec.summary) {
+      spec.summary.sums.forEach(function (s) { s.values = perYear(s.values); });
+      spec.summary.ratios.forEach(function (r) { r.num = perYear(r.num); r.den = perYear(r.den); });
+      spec.summary.exclude.forEach(function (x) {
+        var o = {};
+        (x.index || []).forEach(function (i) { o[ids[i]] = true; });
+        x.ids = o;
+      });
+    }
   }
 
   // Tillgänglig bredd för kartan: förälderns innehållsbredd i sidans egna (oskalade) pixlar.
@@ -251,6 +261,7 @@
       year: spec.default_year,
       hover: null,        // legendklass som hovras
       hidden: (behall && behall.hidden) || {},   // legendklasser som klickats bort
+      excluded: (behall && behall.excluded) || {},   // ikryssade rutor i interactive_exclude (etikett: true)
       selected: null,     // vald region/grupp (för klick-zoom)
       transform: d3.zoomIdentity
     };
@@ -266,6 +277,16 @@
     function valueOf(id) { return lookup(M().values, id); }
     function classOf(id) { return lookup(M().classes, id); }
     function classKey(id) { var c = classOf(id); return c == null ? -1 : c; }
+    // Området är borttaget med en ikryssad ruta i interactive_exclude
+    var SM = spec.summary || null;
+    function isExcluded(id) {
+      if (!SM) return false;
+      for (var i = 0; i < SM.exclude.length; i++) {
+        var x = SM.exclude[i];
+        if (state.excluded[x.label] && x.ids[id]) return true;
+      }
+      return false;
+    }
     function periodText() {
       return state.mode === "forandring" ? M().from_year + "–" + state.year : String(state.year);
     }
@@ -522,7 +543,7 @@
     }
     function opacityOf(d) {
       var k = classKey(d.id);
-      if (state.hidden[k]) return 0.12;
+      if (state.hidden[k] || isExcluded(d.id)) return 0.12;
       if (state.hover != null && state.hover !== k) return 0.3;
       return 1;
     }
@@ -727,7 +748,7 @@
       if (!LB.show) return;
       var items = [];
       LB.ids.forEach(function (id) {
-        if (state.hidden[classKey(id)]) return;
+        if (state.hidden[classKey(id)] || isExcluded(id)) return;
         var a = anchorPx(id, true), o = anchorPx(id, false);
         if (!a) return;
         if (!LB.outside_map && (o[0] < ext.x0 || o[0] > ext.x1 || o[1] < ext.y0 || o[1] > ext.y1)) return;
@@ -820,7 +841,7 @@
         .attr("fill", B.color).attr("fill-opacity", B.alpha)
         .attr("stroke", B.line_color).attr("stroke-width", 1)
         .attr("pointer-events", "none")
-        .attr("display", function (d) { return state.hidden[classKey(d.id)] ? "none" : null; });
+        .attr("display", function (d) { return state.hidden[classKey(d.id)] || isExcluded(d.id) ? "none" : null; });
       sel.order();
       positionUnscaled();
       (animate && dur ? sel.transition().duration(dur) : sel)
@@ -931,8 +952,10 @@
     // gör), minst 20 gånger och högst 1 000 gånger.
     var ew0 = ext.x1 - ext.x0 - bdW, eh0 = ext.y1 - ext.y0 - bdH;   // ytan utan dragning
     var maxZoom = 20;
+    var featBounds = {};   // områdenas ramar i kartans pixlar utan zoom (till summeringsraden)
     feats.forEach(function (f) {
       var b = path.bounds(f), s = Math.max((b[1][0] - b[0][0]) / ew0, (b[1][1] - b[0][1]) / eh0);
+      if (isFinite(b[0][0])) featBounds[f.id] = b;
       if (s > 0 && isFinite(s)) maxZoom = Math.max(maxZoom, 0.85 / s);
     });
     maxZoom = Math.min(1000, maxZoom);
@@ -959,6 +982,7 @@
         zoomG.attr("transform", event.transform);
         setStrokeScale(event.transform.k);
         positionUnscaled();
+        scheduleSummary();
       })
       .on("end", function () { drawLabels(); labelG.attr("opacity", 1); lineG.attr("opacity", 1); });
 
@@ -1244,6 +1268,69 @@
     }
 
     // -------------------------------------------------------------------------
+    //  Summeringsrad (summary_* och interactive_exclude)
+    // -------------------------------------------------------------------------
+    // Raden ligger under kartan i behållaren (inte i SVG:n), så den följer inte med vid export.
+    // Den räknas om vid varje update() och vid zoom, med samma tillstånd som kartan: år, dolda
+    // klasser, ikryssade rutor och zoom. Ett område räknas när dess ram ligger helt i kartytan
+    // ("inside") eller syns delvis ("intersects").
+    var summaryDiv = null, summaryText = null, summaryLast = null, summaryFrame = null;
+    if (SM) {
+      summaryDiv = root.append("div").attr("class", "vgr-d3-summary").style("border-left-color", SM.color)
+        .style("--vgr-summary-color", SM.color).style("font-family", font);
+      summaryText = summaryDiv.append("span").attr("class", "vgr-d3-summary-text");
+      SM.exclude.forEach(function (x) {
+        var lab = summaryDiv.append("label").attr("class", "vgr-d3-summary-exclude");
+        lab.append("input").attr("type", "checkbox").property("checked", !!state.excluded[x.label])
+          .on("change", function () {
+            state.excluded[x.label] = this.checked;
+            update(false);
+          });
+        lab.append("span").text(x.label);
+      });
+    }
+    function scheduleSummary() {
+      if (!SM || summaryFrame) return;
+      summaryFrame = requestAnimationFrame(function () { summaryFrame = null; drawSummary(); });
+    }
+    function drawSummary() {
+      if (!SM || !SM.text) return;
+      var t = state.transform, tol = 0.5, inside = SM.extent !== "intersects", y = state.year;
+      var sums = SM.sums.map(function () { return 0; });
+      var num = SM.ratios.map(function () { return 0; }), den = num.slice();
+      var n = 0;
+      feats.forEach(function (f) {
+        var id = f.id, b = featBounds[id];
+        if (!b || state.hidden[classKey(id)] || isExcluded(id)) return;
+        var x0 = b[0][0] * t.k + t.x, x1 = b[1][0] * t.k + t.x;
+        var y0 = b[0][1] * t.k + t.y, y1 = b[1][1] * t.k + t.y;
+        if (inside ? (x0 < ext.x0 - tol || x1 > ext.x1 + tol || y0 < ext.y0 - tol || y1 > ext.y1 + tol)
+                   : (x1 < ext.x0 || x0 > ext.x1 || y1 < ext.y0 || y0 > ext.y1)) return;
+        n++;
+        SM.sums.forEach(function (s, i) {
+          var v = (s.values[y] || {})[id];
+          if (v != null) sums[i] += v;
+        });
+        // Kvoten räknas bara på områden där både täljaren och nämnaren finns
+        SM.ratios.forEach(function (r, i) {
+          var a = (r.num[y] || {})[id], d = (r.den[y] || {})[id];
+          if (a != null && d != null) { num[i] += a; den[i] += d; }
+        });
+      });
+      var tal = function (s) { return "<span class='vgr-tal'>" + s + "</span>"; };
+      var varden = { period: esc(periodText()), antal: vgrD3.fmt(n, 0, SM.thousands) + " " + esc(SM.count_label[n === 1 ? 0 : 1]) };
+      SM.sums.forEach(function (s, i) { varden[s.key] = tal(vgrD3.fmt(sums[i], s.decimals, SM.thousands)); });
+      SM.ratios.forEach(function (r, i) {
+        varden[r.key] = tal(den[i] ? vgrD3.fmt(SM.ratio_scale * num[i] / den[i], SM.ratio_decimals, SM.thousands) + esc(SM.ratio_unit) : "–");
+      });
+      var html = esc(SM.text).split(" · ").join("<span class='vgr-sep'>·</span>")
+        .replace(/\{([^{}]+)\}/g, function (hela, k) { return varden[k] != null ? varden[k] : hela; });
+      if (html === summaryLast) return;
+      summaryLast = html;
+      summaryText.html(html);
+    }
+
+    // -------------------------------------------------------------------------
     //  Uppdatering
     // -------------------------------------------------------------------------
     function update(animate) {
@@ -1253,6 +1340,7 @@
       drawLegend();
       drawBubbles(animate);
       drawLabels();
+      drawSummary();
       if (TT.show && tipId != null) tip.refresh(tooltipHtml(tipId));
     }
     update(false);
@@ -1295,6 +1383,7 @@
       ny.keep_state = {
         from_year: state.mode === "forandring" && modes.forandring ? modes.forandring.from_year : null,
         hidden: state.hidden,
+        excluded: state.excluded,
         view: vy
       };
       d3.select(el).selectAll("*").remove();
@@ -1326,7 +1415,9 @@
       var bild = el.closest ? el.closest(".reveal .slides") : null;
       if (!bild || !bild.clientHeight) return Infinity;
       var topp = (svg.node().getBoundingClientRect().top - bild.getBoundingClientRect().top) / skala();
-      return Math.max(0, Math.floor(bild.clientHeight - topp - 4));
+      // Summeringsraden under kartan ska också få plats
+      var rad = summaryDiv ? summaryDiv.node().offsetHeight + 4 : 0;
+      return Math.max(0, Math.floor(bild.clientHeight - topp - rad - 4));
     }
 
     // -------------------------------------------------------------------------

@@ -129,6 +129,14 @@
       ".vgr-d3-resize:hover{background-color:rgba(236,239,241,.8);}",
       "@media (pointer:coarse){.vgr-d3-resize{width:28px;height:28px;}}",
       ".vgr-d3-resize-frame{position:absolute;border:2px dashed #37474F;box-sizing:border-box;pointer-events:none;z-index:5;}",
+      // Kartans summeringsrad (summary_* och interactive_exclude); vänsterkanten får kartans färg
+      ".vgr-d3-summary{box-sizing:border-box;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0 12px;",
+      "margin:4px 0 0;padding:4px 10px;text-align:left;background:#f3f7fb;border:1px solid #cfd8dc;border-left:4px solid #37474F;",
+      "border-radius:4px;font-size:13px;line-height:1.45;color:#37474F;}",
+      ".vgr-d3-summary .vgr-tal{font-weight:bold;color:var(--vgr-summary-color,#37474F);white-space:nowrap;}",
+      ".vgr-d3-summary .vgr-sep{color:#90a4ae;padding:0 6px;}",
+      ".vgr-d3-summary label{white-space:nowrap;cursor:pointer;}",
+      ".vgr-d3-summary input{vertical-align:middle;margin:0 4px 0 0;cursor:pointer;}",
       ".vgr-d3-tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid #cfd8dc;border-radius:6px;",
       "box-shadow:0 2px 8px rgba(0,0,0,.15);padding:8px 10px;font-size:13px;color:#263238;max-width:340px;z-index:10;transition:opacity .12s;}",
       // Smala skärmar: tooltipen får inte bli bredare än skärmen
