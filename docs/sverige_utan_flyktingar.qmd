@@ -1,0 +1,374 @@
+---
+title: "Ett Sverige utan flyktingar"
+lang: sv
+execute:
+  echo: false
+  warning: false
+  message: false
+  # Resultatet sparas i _freeze, så att boken kan byggas om utan kartdatan så länge
+  # kapitlet inte ändras
+  freeze: auto
+---
+
+```{r}
+#| label: las-in-data
+# Kartan ritas med funcVGRD3::func_d3_karta(), som i presentationen
+# R_claude/foredrag_bluffen/foredrag_den_langa_bluffen.qmd. Kommunkartan och statistiken hämtas
+# från presentationens mapp foredrag_bluffen (karta/ och data/), så att boken och presentationen
+# visar samma data. Kommunkartan är densamma som kommungränserna på RegSO-kartan i
+# karta_sysselsattning_regso.qmd.
+library(sf)
+library(dplyr)
+library(readxl)
+library(funcVGRD3)
+# Raden under kartan (summary_* och interactive_exclude) kräver funcVGRD3 0.13.0
+stopifnot(packageVersion("funcVGRD3") >= "0.13.0")
+
+# foredrag_bluffen söks uppåt i katalogträdet från bokens mapp
+regso_mapp <- NULL
+for (upp in 0:5) {
+  kandidat <- file.path(do.call(file.path, as.list(c(".", rep("..", upp)))), "foredrag_bluffen")
+  if (dir.exists(kandidat)) { regso_mapp <- kandidat; break }
+}
+if (is.null(regso_mapp)) stop("Hittar inte projektet foredrag_bluffen ovanför ", getwd())
+
+kommun_geo <- st_read(file.path(regso_mapp, "karta", "kommuner_fran_regso.gpkg"), quiet = TRUE)
+
+# Befolkningsförändring per kommun 2000–2024, faktisk och exklusive flyktingar och barn till
+# flyktingkvinnor (invandrade efter 2000). Bladet bef_tot har en rubrikrad och förändringen både i
+# antal och som andel (0–1). Knivsta (0330) saknas i filen eftersom kommunen bildades 2003, och
+# visas grå på kartan. Uppsala (0380) har Knivsta med: summan för alla kommuner är hela rikets
+# befolkning.
+bef_kommun <- read_excel(file.path(regso_mapp, "data", "demografi_flykt_barn.xlsx"), sheet = "bef_tot") |>
+  transmute(kommunkod     = Kommun,
+            bef_2000      = as.numeric(antal_2000),
+            bef_2024      = as.numeric(antal_2024),
+            bef_2024_exkl = as.numeric(ant2024_exkl_flykt_barn),
+            abs_faktisk   = as.numeric(forandring_abs),
+            abs_exkl      = as.numeric(forandring_abs_ej_flykt),
+            pct_faktisk   = round(100 * as.numeric(forandring_procent), 1),
+            pct_exkl      = round(100 * as.numeric(forandring_procent_ej_flykt), 1))
+stopifnot(!anyNA(bef_kommun), all(bef_kommun$kommunkod %in% kommun_geo$kommunkod),
+          # Förändringskolumnerna ska stämma med befolkningstalen
+          bef_kommun$abs_faktisk == bef_kommun$bef_2024 - bef_kommun$bef_2000,
+          bef_kommun$abs_exkl == bef_kommun$bef_2024_exkl - bef_kommun$bef_2000)
+
+# Talen i texten nedan
+antal_txt <- function(x) formatC(x, format = "d", big.mark = " ")
+minskar_faktisk <- sum(bef_kommun$abs_faktisk < 0)
+minskar_exkl    <- sum(bef_kommun$abs_exkl < 0)
+
+bef_kommun <- bef_kommun |>
+  mutate(# Skillnaden mellan faktisk förändring och förändringen exklusive flyktingar och barn
+         skillnad = abs_faktisk - abs_exkl,
+         # Till kryssrutan under kartan (interactive_exclude kräver TRUE/FALSE)
+         tillvaxt = abs_faktisk > 0,
+         # Antalet kommuner i summeringsraden räknas som en summa, så att Knivsta (som saknar
+         # data och får NA här) inte räknas med; {antal} räknar alla kommuner som syns
+         med_data = 1,
+         # Förändringarna som text till popupen, formaterade som kartans eget värde
+         across(c(abs_faktisk, abs_exkl), ~ formatC(.x, format = "d", big.mark = " "),
+                .names = "txt_{.col}"),
+         # (procenttecknet står i popupradens etikett, som "Tillväxt (%)" i summeringsraden)
+         across(c(pct_faktisk, pct_exkl), ~ formatC(.x, format = "f", digits = 1, decimal.mark = ","),
+                .names = "txt_{.col}"))
+
+# Samma kommunkarta som overlay på RegSO-kartan i kapitlet före
+kommun_bef <- left_join(kommun_geo, bef_kommun, by = "kommunkod")
+
+# Osynlig (vit) bakgrund, mycket bredare än Sverige och lika hög. func_d3_karta flyttar annars
+# förklaringen in mot kartans kant och kortar kartytan lika mycket, så att Sverige hamnar längst
+# till vänster i visningsrutan med allt tomrum till höger. Med en bakgrund som fyller rutans bredd
+# finns inget tomrum att ta bort, och Sverige står mitt i rutan. Kartan anpassas fortfarande bara
+# efter kommunerna (basemap_fit = FALSE).
+kommun_ram <- st_bbox(kommun_geo)
+kommun_bakgrund <- st_sf(geom = st_as_sfc(st_bbox(
+  c(xmin = -3e6, xmax = 4e6, ymin = kommun_ram[["ymin"]], ymax = kommun_ram[["ymax"]]),
+  crs = st_crs(kommun_geo))))
+
+# En karta per mått och enhet; menyerna ovanför visar en i taget. Faktisk förändring och
+# förändring exklusive flyktingar har samma klassgränser, så att färgerna går att jämföra.
+# Popupens förändringsrader, i den ordning de visas (namnet är mått_enhet)
+popup_etikett <- c(faktisk_abs = "Förändring 2000–2024",
+                   exkl_abs    = "Förändring exkl. flyktingar/barn",
+                   faktisk_pct = "Förändring 2000–2024 (%)",
+                   exkl_pct    = "Förändring exkl. flyktingar/barn (%)")
+
+kommunkarta <- function(matt, enhet) {
+  procent <- enhet == "pct"
+  # Kartans eget värde är en av förändringsraderna; de tre andra blir kolumner (txt_enhet_mått)
+  andra <- setdiff(names(popup_etikett), paste0(matt, "_", enhet))
+  func_d3_karta(
+    kommun_bef,
+    df_value                = paste0(enhet, "_", matt),
+    geom_col                = "geom",
+    geom_id_column          = "kommunkod",
+    basemap                 = kommun_bakgrund,   # centrerar Sverige i visningsrutan (se ovan)
+    basemap_fit             = FALSE,
+    basemap_color           = "#ffffff",
+    basemap_color_line      = "#ffffff",
+    # Ingen högermarginal (som i presentationen): bokens spalt är smalare än en bild, och en
+    # zoomad karta skulle klippas långt innan spaltens högerkant.
+    # Ingen förenkling: då är geometrin densamma som kommungränserna på RegSO-kartan, och alla
+    # kartor på sidan delar på samma inbäddade block
+    geom_simplify_tolerance = NULL,
+    tooltip_name_column     = "kommunnamn",
+    # Popupen visar faktisk förändring och förändringen exklusive flyktingar och barn, i antal och
+    # i procent: kartans eget värde (med färgruta) och de tre andra som kolumner. Skriptet under
+    # kartorna lägger dem överst i samma ordning på alla kartor och tar bort raden "Klass".
+    tooltip_value_label     = popup_etikett[[paste0(matt, "_", enhet)]],
+    tooltip_columns         = c(setNames(sub("^(\\w+)_(\\w+)$", "txt_\\2_\\1", andra), popup_etikett[andra]),
+                                "Befolkning 2024" = "bef_2024",
+                                "Befolkning 2024 exkl. flyktingar och barn" = "bef_2024_exkl"),
+    tooltip_rank            = FALSE,
+    tooltip_decimals        = if (procent) 1 else 0,
+    breaks_method           = "custom",
+    # Under lägsta och över högsta gränsen blir öppna klasser ("< -20", "35 +")
+    breaks_custom           = if (procent) c(-20, -10, 0, 10, 20, 35)
+                              else c(-1000, 0, 1000, 5000, 20000),
+    color                   = "#0d366b",
+    color_low               = "#cde2fb",
+    color_negative          = "#b2182b",   # röd skala för minskning, som på RegSO-kartan
+    data_color_line         = "white",
+    data_label_show         = FALSE,
+    legend_position         = "left",
+    legend_title            = if (procent) "Förändring 2000–2024 (%)" else "Förändring 2000–2024 (antal)",
+    width                   = 1100,
+    height                  = 900,   # Sverige är smalt och högt
+    # Draghandtag i kartans nedre högra hörn, som på RegSO-kartan. Menyskriptet nedan ger den
+    # karta man byter till samma storlek, samma utsnitt och samma läge i kryssrutan.
+    interactive_resize      = TRUE,
+    # Summeringsrad under kartan för de kommuner som syns helt i kartytan (och inte är bortvalda
+    # i förklaringen eller med kryssrutan). Raden räknas om när man zoomar, panorerar eller
+    # döljer klasser. Tillväxten är summan av förändringen delad med summan av befolkningen 2000.
+    summary_text            = paste("Antal kommuner: {kommuner}", "Befolkning 2024: {bef}",
+                                    "Faktisk befolkningsförändring 2000–2024: {forandring}",
+                                    "Befolkningsförändring exklusive flyktingar och barn till flyktingkvinnor: {forandring_exkl}",
+                                    "Skillnad i befolkningsförändring: {skillnad}",
+                                    "Tillväxt (%): {tillvaxt}",
+                                    "Tillväxt exkl. flyktingar/barn (%): {tillvaxt_exkl}", sep = " · "),
+    summary_sum             = c(kommuner = "med_data", bef = "bef_2024", forandring = "abs_faktisk",
+                                forandring_exkl = "abs_exkl", skillnad = "skillnad"),
+    summary_ratio           = list(tillvaxt = c("abs_faktisk", "bef_2000"),
+                                   tillvaxt_exkl = c("abs_exkl", "bef_2000")),
+    summary_ratio_unit      = "",   # procenttecknet står i texten
+    # Kryssrutan i raden tonar ned kommunerna med faktisk befolkningstillväxt och räknar bort dem
+    interactive_exclude     = c("Exkludera kommuner med faktisk befolkningstillväxt" = "tillvaxt")
+  )
+}
+```
+
+Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan nedan visar hur befolkningen i Sveriges kommuner har förändrats mellan 2000 och 2024, dels i verkligheten, dels om man räknar bort de flyktingar som har invandrat efter år 2000 och barn till flyktingkvinnor.
+
+I hela landet ökade befolkningen med `r antal_txt(sum(bef_kommun$abs_faktisk))` personer mellan 2000 och 2024. Utan flyktingarna och deras barn hade ökningen varit `r antal_txt(sum(bef_kommun$abs_exkl))` personer. Antalet kommuner där befolkningen minskade hade då varit `r minskar_exkl` i stället för `r minskar_faktisk`.
+
+Så här använder du kartan:
+
+- **Välj vad kartan visar** med menyerna ovanför den: faktisk förändring eller förändring exklusive flyktingar och barn till flyktingkvinnor, som antal personer eller i procent. Färgskalan är densamma för båda måtten, så det går att jämföra kartorna genom att växla mellan dem.
+- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på en kommun för att zooma in på den. *Återställ* visar hela landet igen. Kartan behåller utsnittet när du byter mått eller enhet i menyerna.
+- **Se detaljer** genom att hålla muspekaren över en kommun: förändringen med och utan flyktingar och barn, i antal och i procent, samt befolkningen 2024.
+- **På mobil och pekplatta** trycker du på en kommun för att se detaljerna och trycker en gång till för att zooma in på den. Nyp för att zooma och dra med ett finger för att flytta kartan.
+- **Sök** efter en kommun i sökrutan. När du väljer ett namn i listan zoomar kartan in på kommunen. Krysset i rutan tömmer den.
+- **Välj bort** grupper av kommuner genom att klicka på dem i teckenförklaringen.
+- **Exkludera kommuner med faktisk befolkningstillväxt** genom att kryssa i rutan i raden under kartan. Då tonas de ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
+- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
+
+Raden under kartan summerar de kommuner som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan. Zoomar du in på en del av landet visar raden alltså siffrorna för de kommunerna.
+
+```{=html}
+<style>
+/* Fyra kartor ligger ovanpå varandra och menyerna visar en i taget. De dolda kartorna döljs med
+   visibility och inte display: none, så att D3 kan mäta och rita dem när sidan laddas. Den karta
+   som visas ligger i flödet, så att ytan blir lika hög som den när storleken dras om. */
+.kommunkarta .kartval { margin: 6px 0 8px 0; }
+.kommunkarta .kartval label { display: inline-block; max-width: 100%; margin-right: 24px; }
+.kommunkarta .kartval select { font: inherit; padding: 2px 4px; width: auto; max-width: 100%; }
+.kommunkarta .kartytor { position: relative; }
+.kommunkarta .kartvariant { position: absolute; top: 0; left: 0; right: 0; visibility: hidden; }
+.kommunkarta .kartvariant.vald { position: relative; visibility: visible; }
+.kommunkarta .cell-output-display { overflow: visible; }
+/* Kryssrutans långa text ska radbrytas i stället för att sticka ut på mobil */
+.kommunkarta .vgr-d3-summary-exclude { white-space: normal; }
+</style>
+<script>
+// Kommunkartornas zoom: funcVGRD3 sparar inte zoomobjektet (d3.zoom) någonstans där det går att nå,
+// men anropar svg.call(zoom) när en karta ritas. Anropet fångas här och zoomobjektet sparas på
+// SVG:n, så att menyskriptet längre ned kan ge en karta samma utsnitt som den förra. Skriptet
+// körs innan kartorna ritas (det sker först när sidan har laddats).
+(function () {
+  if (!window.d3 || d3.selection.prototype.__kommunkartaZoom) return;
+  var call = d3.selection.prototype.call;
+  d3.selection.prototype.call = function (fn) {
+    var n = this.node && this.node();
+    if (typeof fn === "function" && fn.scaleExtent && fn.translateExtent && n && n.closest &&
+        n.closest(".kommunkarta")) n.__kommunkartaZoom = fn;
+    return call.apply(this, arguments);
+  };
+  d3.selection.prototype.__kommunkartaZoom = true;
+})();
+</script>
+```
+
+<!-- Kartan breder bara ut sig åt höger, som RegSO-kartan i kapitlet före. -->
+::::: {.kommunkarta .column-body-outset-right}
+::: kartval
+```{=html}
+<label>Visa
+  <select data-val="matt" aria-label="Mått">
+    <option value="faktisk">faktisk förändring</option>
+    <option value="exkl">förändring exklusive flyktingar och barn till flyktingkvinnor</option>
+  </select>
+</label>
+<label>som
+  <select data-val="enhet" aria-label="Enhet">
+    <option value="abs">antal personer</option>
+    <option value="pct">procent</option>
+  </select>
+</label>
+```
+:::
+
+:::: kartytor
+::: {.kartvariant data-matt="faktisk" data-enhet="abs"}
+```{r}
+#| label: kommunkarta-faktisk-abs
+kommunkarta("faktisk", "abs")
+```
+:::
+
+::: {.kartvariant data-matt="faktisk" data-enhet="pct"}
+```{r}
+#| label: kommunkarta-faktisk-pct
+kommunkarta("faktisk", "pct")
+```
+:::
+
+::: {.kartvariant data-matt="exkl" data-enhet="abs"}
+```{r}
+#| label: kommunkarta-exkl-abs
+kommunkarta("exkl", "abs")
+```
+:::
+
+::: {.kartvariant data-matt="exkl" data-enhet="pct"}
+```{r}
+#| label: kommunkarta-exkl-pct
+kommunkarta("exkl", "pct")
+```
+:::
+::::
+:::::
+
+```{=html}
+<script>
+// Menyerna ovanför kommunkartan visar den karta som hör till valt mått och vald enhet. Kartan man
+// byter till får samma storlek (draghandtaget), samma utsnitt och samma läge i kryssrutan under
+// kartan som den förra.
+(function () {
+  // Elementet som funcVGRD3 ritar kartan i
+  function karta(d) { return d && d.querySelector('div[id^="vgrd3-"]'); }
+
+  // Kartans SVG, zoomobjekt, zoomyta (den osynliga rektangeln framför kartgruppen) och kartans
+  // ram i kartgruppens egna koordinater (utan zoom)
+  function delar(el) {
+    var svg = el.querySelector("svg.vgr-d3-svg");
+    var rect = svg && svg.querySelector('rect[fill-opacity="0"]');
+    var g = rect && rect.nextElementSibling;
+    if (!g || !svg.__kommunkartaZoom) return null;
+    return {
+      svg: svg, zoom: svg.__kommunkartaZoom, bb: g.getBBox(),
+      mitt: [+rect.getAttribute("x") + rect.getAttribute("width") / 2,
+             +rect.getAttribute("y") + rect.getAttribute("height") / 2]
+    };
+  }
+
+  // Ritar om en karta med dess egen spec, som funcVGRD3 gör efter en storleksändring
+  function rita(el) {
+    var spec = document.getElementById(el.id + "-spec");
+    if (!spec) return;
+    d3.select(el).selectAll("*").remove();
+    el.style.width = "";
+    vgrD3.renderers.karta(el, JSON.parse(spec.textContent));
+  }
+
+  function overfor(franEl, tillEl) {
+    // Bara kartor som redan är ritade
+    if (!franEl.querySelector("svg.vgr-d3-svg") || !tillEl.querySelector("svg.vgr-d3-svg")) return;
+    // Storleken: funcVGRD3 sparar den dragna storleken på elementet och använder den vid ritning
+    if (JSON.stringify(franEl.__vgrStorlek || null) !== JSON.stringify(tillEl.__vgrStorlek || null)) {
+      tillEl.__vgrStorlek = franEl.__vgrStorlek ? Object.assign({}, franEl.__vgrStorlek) : null;
+      rita(tillEl);
+    }
+    // Kryssrutorna i summeringsraden (i samma ordning på alla kartor)
+    var franKryss = franEl.querySelectorAll(".vgr-d3-summary-exclude input");
+    tillEl.querySelectorAll(".vgr-d3-summary-exclude input").forEach(function (k, i) {
+      if (franKryss[i] && k.checked !== franKryss[i].checked) {
+        k.checked = franKryss[i].checked;
+        k.dispatchEvent(new Event("change"));
+      }
+    });
+    var a = delar(franEl), b = delar(tillEl);
+    if (!a || !b || !a.bb.width || !b.bb.width) return;
+    var t = d3.zoomTransform(a.svg);
+    if (t.k < 1.001 && Math.abs(t.x) < 0.5 && Math.abs(t.y) < 0.5) t = d3.zoomIdentity;   // inte zoomad
+    else {
+      // Punkten mitt i zoomytan, i den förra kartans koordinater, räknas om till den nya kartans.
+      // Kartorna har samma geometri men förklaringarna är olika breda, så kartorna kan vara
+      // något olika stora och förskjutna: omräkningen går via kartans ram.
+      var c = t.invert(a.mitt), s = b.bb.width / a.bb.width;
+      var c2 = [b.bb.x + (c[0] - a.bb.x) * s, b.bb.y + (c[1] - a.bb.y) * s];
+      t = d3.zoomIdentity.translate(b.mitt[0], b.mitt[1]).scale(t.k).translate(-c2[0], -c2[1]);
+    }
+    d3.select(b.svg).call(b.zoom.transform, t);
+  }
+
+  // Popupen: funcVGRD3 lägger kartans värde först, sedan raden "Klass" (som inte går att stänga
+  // av) och de extra kolumnerna sist. Raden "Klass" tas bort och förändringsraderna läggs överst
+  // i ordningen nedan (samma som popup_etikett i R), så att popupen ser likadan ut på alla kartor.
+  var forsta = ["Förändring 2000–2024", "Förändring exkl. flyktingar/barn",
+                "Förändring 2000–2024 (%)", "Förändring exkl. flyktingar/barn (%)"];
+  function etikett(r) { return r.firstElementChild ? r.firstElementChild.textContent : ""; }
+  function ordnaPopup(tip) {
+    var rader = Array.prototype.slice.call(tip.querySelectorAll(":scope > .vgr-tt-row"));
+    rader.filter(function (r) { return etikett(r) === "Klass"; }).forEach(function (r) { r.remove(); });
+    rader = rader.filter(function (r) { return r.isConnected; });
+    var flytta = forsta.map(function (text) {
+      return rader.filter(function (r) { return etikett(r) === text; })[0];
+    }).filter(Boolean);
+    // Redan i ordning (skriptet själv ändrar också popupen och anropas då igen)
+    if (flytta.every(function (r, i) { return rader[i] === r; })) return;
+    var fore = rader[0];
+    flytta.forEach(function (r) { tip.insertBefore(r, fore); if (r === fore) fore = r.nextSibling; });
+  }
+
+  document.querySelectorAll(".kommunkarta").forEach(function (sek) {
+    // Popupens innehåll skrivs om varje gång muspekaren flyttas till en ny kommun
+    new MutationObserver(function (andringar) {
+      andringar.forEach(function (a) {
+        var tip = a.target.closest ? a.target.closest(".vgr-d3-tooltip") : null;
+        if (tip) ordnaPopup(tip);
+      });
+    }).observe(sek.querySelector(".kartytor"), { childList: true, subtree: true });
+
+    var val = function (namn) { return sek.querySelector('select[data-val="' + namn + '"]').value; };
+    var visa = function () {
+      var forra = sek.querySelector(".kartvariant.vald"), ny = null;
+      sek.querySelectorAll(".kartvariant").forEach(function (d) {
+        if (d.dataset.matt === val("matt") && d.dataset.enhet === val("enhet")) ny = d;
+      });
+      if (!ny || ny === forra) return;
+      // Den nya kartan visas först, så att den har rätt bredd om den behöver ritas om
+      ny.classList.add("vald");
+      if (forra) {
+        forra.classList.remove("vald");
+        overfor(karta(forra), karta(ny));
+      }
+    };
+    sek.querySelectorAll("select").forEach(function (s) { s.addEventListener("change", visa); });
+    visa();
+  });
+})();
+</script>
+```
+
+Knivsta kommun bildades 2003 och redovisas inte separat i underlaget, utan ingår i Uppsalas siffror. Knivsta visas därför grått på kartan.
