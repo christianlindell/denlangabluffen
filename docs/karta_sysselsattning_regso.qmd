@@ -1,6 +1,9 @@
 ---
 title: "Se hur arbetsmarknaden utvecklats i ditt eget bostadsområde"
 lang: sv
+format:
+  html:
+    css: faktabox.css
 execute:
   echo: false
   warning: false
@@ -66,19 +69,7 @@ Antalet personer som bor i områden med låg andel förvärvsarbetande har under
 
 Tar vi Göteborg som exempel fanns det 2005 totalt 31 områden (stadsdelar) där mindre än 60 procent av befolkningen mellan 20-64 år arbetade. I dessa områden bodde 57 000 invånare i arbetsför ålder. 2024 fanns det 6 områden med knappt 11 000 invånare. Av dessa områden var 3 studentbostadsområden, vilka stod för nästan hälften av antalet invånare. Nedgången är inte unik för Göteborg utan kan ses i alla större städer. Det innebär naturligtvis inte att det inte finns andra problem som kan vara kopplade till utbildningresultat, kriminalitet och andra typer av utanförskap. Men det är tveklöst att integrationen på arbetsmarknaden har ökat mycket kraftigt under lång tid.
 
-Kartan visar nedan andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren `r forsta_ar`–`r sista_ar`. Ju mörkare blå färg, desto högre andel sysselsatta. Så här använder du kartan:
-
-- **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
-- **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
-- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
-- **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
-- **På mobil och pekplatta** trycker du på ett område för att se detaljerna och trycker en gång till för att zooma in på det. Nyp för att zooma och dra med ett finger för att flytta kartan.
-- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
-- **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
-- **Exkludera studentområden** genom att kryssa i rutan i raden under kartan. Som studentområden räknas områden där över 40 procent av de boende 20–64 år var studerande 2023. Där förvärvsarbetar många invånare inte eftersom de studerar. Studentområdena tonas ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
-- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
-
-Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
+Kartan visar andelen sysselsatta bland invånarna 20–64 år i SCB:s regionala statistikområden (RegSO), som i städerna i stort sett motsvarar stadsdelar, för åren `r forsta_ar`–`r sista_ar`. Ju mörkare blå färg, desto högre andel sysselsatta.
 
 Notera att gränspendlare till andra nordiska länder ingår i sysselsättningsstatistiken först år 2020. Det innebär att tillväxttakten framstår som för kraftig i kommuner som Malmö, Strömstad och Haparanda, vilka har en stor andel gränspendlare, om man jämför sysselsättningen ett år före 2020 med 2020 eller senare. För att  kompensera för detta räknas även alla som har en årsinkomst från annat nordiskt land som sysselsatta mellan 2011 och 2019. Tidigare än så saknas data för att kompensera att gränspendlare inte räknas som sysselsatta i den officiella statistiken.
 
@@ -155,3 +146,19 @@ func_d3_karta(
 :::
 
 Källa: SCB, RegSO 2025 (geometri) samt sysselsättnings-, studerande- och befolkningsstatistik per RegSO. Befolkningen redovisas inte när den understiger 5 personer, och antalet sysselsatta inte när antalet, eller antalet i befolkningen som inte ingår i gruppen, understiger 5 personer. Studentområden är områden där mer än 40 % var studerande 2023.
+
+::: faktabox
+### Så använder du kartan {.unnumbered .unlisted}
+
+- **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
+- **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
+- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
+- **Se detaljer** genom att hålla muspekaren över ett område: andel sysselsatta, antal sysselsatta, befolkning 20–64 år och andel studerande.
+- **På mobil och pekplatta** trycker du på ett område för att se detaljerna och trycker en gång till för att zooma in på det. Nyp för att zooma och dra med ett finger för att flytta kartan.
+- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Haga (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
+- **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
+- **Exkludera studentområden** genom att kryssa i rutan i raden under kartan. Som studentområden räknas områden där över 40 procent av de boende 20–64 år var studerande 2023. Där förvärvsarbetar många invånare inte eftersom de studerar. Studentområdena tonas ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
+- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
+
+Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen sysselsatta bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
+:::

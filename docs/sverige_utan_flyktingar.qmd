@@ -1,6 +1,9 @@
 ---
 title: "Ett Sverige utan flyktingar"
 lang: sv
+format:
+  html:
+    css: faktabox.css
 execute:
   echo: false
   warning: false
@@ -158,22 +161,9 @@ kommunkarta <- function(matt, enhet) {
 }
 ```
 
-Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan nedan visar hur befolkningen i Sveriges kommuner har förändrats mellan 2000 och 2024, dels i verkligheten, dels om man räknar bort de flyktingar som har invandrat efter år 2000 och barn till flyktingkvinnor.
+Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan visar hur befolkningen i Sveriges kommuner har förändrats mellan 2000 och 2024, dels i verkligheten, dels om man räknar bort de flyktingar som har invandrat efter år 2000 och barn till flyktingkvinnor.
 
 I hela landet ökade befolkningen med `r antal_txt(sum(bef_kommun$abs_faktisk))` personer mellan 2000 och 2024. Utan flyktingarna och deras barn hade ökningen varit `r antal_txt(sum(bef_kommun$abs_exkl))` personer. Antalet kommuner där befolkningen minskade hade då varit `r minskar_exkl` i stället för `r minskar_faktisk`.
-
-Så här använder du kartan:
-
-- **Välj vad kartan visar** med menyerna ovanför den: faktisk förändring eller förändring exklusive flyktingar och barn till flyktingkvinnor, som antal personer eller i procent. Färgskalan är densamma för båda måtten, så det går att jämföra kartorna genom att växla mellan dem.
-- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på en kommun för att zooma in på den. *Återställ* visar hela landet igen. Kartan behåller utsnittet när du byter mått eller enhet i menyerna.
-- **Se detaljer** genom att hålla muspekaren över en kommun: förändringen med och utan flyktingar och barn, i antal och i procent, samt befolkningen 2024.
-- **På mobil och pekplatta** trycker du på en kommun för att se detaljerna och trycker en gång till för att zooma in på den. Nyp för att zooma och dra med ett finger för att flytta kartan.
-- **Sök** efter en kommun i sökrutan. När du väljer ett namn i listan zoomar kartan in på kommunen. Krysset i rutan tömmer den.
-- **Välj bort** grupper av kommuner genom att klicka på dem i teckenförklaringen.
-- **Exkludera kommuner med faktisk befolkningstillväxt** genom att kryssa i rutan i raden under kartan. Då tonas de ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
-- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
-
-Raden under kartan summerar de kommuner som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan. Zoomar du in på en del av landet visar raden alltså siffrorna för de kommunerna.
 
 ```{=html}
 <style>
@@ -372,3 +362,18 @@ kommunkarta("exkl", "pct")
 ```
 
 Knivsta kommun bildades 2003 och redovisas inte separat i underlaget, utan ingår i Uppsalas siffror. Knivsta visas därför grått på kartan.
+
+::: faktabox
+### Så använder du kartan {.unnumbered .unlisted}
+
+- **Välj vad kartan visar** med menyerna ovanför den: faktisk förändring eller förändring exklusive flyktingar och barn till flyktingkvinnor, som antal personer eller i procent. Färgskalan är densamma för båda måtten, så det går att jämföra kartorna genom att växla mellan dem.
+- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på en kommun för att zooma in på den. *Återställ* visar hela landet igen. Kartan behåller utsnittet när du byter mått eller enhet i menyerna.
+- **Se detaljer** genom att hålla muspekaren över en kommun: förändringen med och utan flyktingar och barn, i antal och i procent, samt befolkningen 2024.
+- **På mobil och pekplatta** trycker du på en kommun för att se detaljerna och trycker en gång till för att zooma in på den. Nyp för att zooma och dra med ett finger för att flytta kartan.
+- **Sök** efter en kommun i sökrutan. När du väljer ett namn i listan zoomar kartan in på kommunen. Krysset i rutan tömmer den.
+- **Välj bort** grupper av kommuner genom att klicka på dem i teckenförklaringen.
+- **Exkludera kommuner med faktisk befolkningstillväxt** genom att kryssa i rutan i raden under kartan. Då tonas de ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
+- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
+
+Raden under kartan summerar de kommuner som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan. Zoomar du in på en del av landet visar raden alltså siffrorna för de kommunerna.
+:::

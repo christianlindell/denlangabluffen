@@ -1,0 +1,15 @@
+/* Faktaboxen under kartorna i kapitel 7 och 8 */
+.faktabox {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: #f2f2f2;
+  border-radius: 4px;
+}
+
+.faktabox h3 {
+  margin-top: 0;
+}
+
+.faktabox > :last-child {
+  margin-bottom: 0;
+}
