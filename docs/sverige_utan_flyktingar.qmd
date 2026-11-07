@@ -165,6 +165,8 @@ Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan visar hur 
 
 I hela landet ökade befolkningen med `r antal_txt(sum(bef_kommun$abs_faktisk))` personer mellan 2000 och 2024. Utan flyktingarna och deras barn hade ökningen varit `r antal_txt(sum(bef_kommun$abs_exkl))` personer. Antalet kommuner där befolkningen minskade hade då varit `r minskar_exkl` i stället för `r minskar_faktisk`.
 
+(Notera att endast barn till flyktingkvinnor som var folkbokförda i Sverige i slutet av perioden finns med i underlaget till karta, vilket innebär att antalet barn underskattas.)
+
 ```{=html}
 <style>
 /* Fyra kartor ligger ovanpå varandra och menyerna visar en i taget. De dolda kartorna döljs med
