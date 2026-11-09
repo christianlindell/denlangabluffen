@@ -161,7 +161,7 @@ kommunkarta <- function(matt, enhet) {
 }
 ```
 
-Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan visar hur befolkningen i Sveriges kommuner har förändrats mellan 2000 och 2024, dels i verkligheten, dels om man räknar bort de flyktingar som har invandrat efter år 2000 och barn till flyktingkvinnor.
+Vad hade hänt om vi slutat ta emot flyktingar efter år 2000? Kartan visar hur befolkningen i Sveriges kommuner har förändrats mellan 2000 och 2024, dels i verkligheten, dels om man räknar bort de flyktingar/skyddsbehövande och anhöriga som har invandrat efter år 2000 och barn till kvinnor i dessa grupper.
 
 I hela landet ökade befolkningen med `r antal_txt(sum(bef_kommun$abs_faktisk))` personer mellan 2000 och 2024. Utan flyktingarna och deras barn hade ökningen varit `r antal_txt(sum(bef_kommun$abs_exkl))` personer. Antalet kommuner där befolkningen minskade hade då varit `r minskar_exkl` i stället för `r minskar_faktisk`.
 
