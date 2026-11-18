@@ -366,7 +366,8 @@ kommunkarta("exkl", "pct")
 Knivsta kommun bildades 2003 och redovisas inte separat i underlaget, utan ingår i Uppsalas siffror. Knivsta visas därför grått på kartan.
 
 ::: faktabox
-### Så använder du kartan {.unnumbered .unlisted}
+<details>
+<summary>Så använder du kartan</summary>
 
 - **Välj vad kartan visar** med menyerna ovanför den: faktisk förändring eller förändring exklusive flyktingar och barn till flyktingkvinnor, som antal personer eller i procent. Färgskalan är densamma för båda måtten, så det går att jämföra kartorna genom att växla mellan dem.
 - **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på en kommun för att zooma in på den. *Återställ* visar hela landet igen. Kartan behåller utsnittet när du byter mått eller enhet i menyerna.
@@ -378,4 +379,6 @@ Knivsta kommun bildades 2003 och redovisas inte separat i underlaget, utan ingå
 - **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
 
 Raden under kartan summerar de kommuner som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan. Zoomar du in på en del av landet visar raden alltså siffrorna för de kommunerna.
+
+</details>
 :::

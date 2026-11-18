@@ -13,3 +13,19 @@
 .faktabox > :last-child {
   margin-bottom: 0;
 }
+
+/* Rutans innehåll fälls ut och ihop med pilen framför rubriken (<details>), som Quartos
+   "visa kod". Rutan är stängd från början. */
+.faktabox summary {
+  font-size: 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.faktabox details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.faktabox details > :last-child {
+  margin-bottom: 0;
+}

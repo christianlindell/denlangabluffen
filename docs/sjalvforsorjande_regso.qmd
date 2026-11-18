@@ -145,7 +145,8 @@ func_d3_karta(
 Källa: SCB, självförsörjning per RegSO (TAB6766), RegSO-indelningen från 2020.
 
 ::: faktabox
-### Så använder du kartan {.unnumbered .unlisted}
+<details>
+<summary>Så använder du kartan</summary>
 
 - **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
 - **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
@@ -158,6 +159,8 @@ Källa: SCB, självförsörjning per RegSO (TAB6766), RegSO-indelningen från 20
 - **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
 
 Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen självförsörjande bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
+
+</details>
 :::
 
 ## Hela fördelningen har flyttats åt höger
