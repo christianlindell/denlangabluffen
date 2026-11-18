@@ -121,11 +121,12 @@
             if (ms.percentage) v = v / a * 100;
             if (!isFinite(v)) v = null;
           }
-          // Klassen på det exakta värdet (som func_d3_karta_klass i R); det visade värdet med
-          // 15 värdesiffror som när R skrev det till JSON, så att t.ex. lika förändringar
-          // får samma plats i rangordningen
-          cl[i] = classify(v, ms.breaks);
+          // Värdet med 15 värdesiffror, som när R skrev det till JSON (och som R räknar
+          // förändringen), så att lika förändringar får samma plats i rangordningen. Klassen
+          // räknas på samma värde: 3,3 - 8,3 = -5,0000000000000009 visas som -5,0 och hör till
+          // klassen från -5, inte "< -5"
           d[i] = v == null ? null : +v.toPrecision(15);
+          cl[i] = classify(d[i], ms.breaks);
         }
         ms.values[y] = byId(d);
         ms.from[y] = withoutMissing(fromById, y);
@@ -586,9 +587,12 @@
         var r = rankOf(id);
         h += vgrD3.tooltipRow("Rangordning", "Plats " + r.rank + " av " + r.n);
       }
-      if (c != null) h += vgrD3.tooltipRow(ms.class_row_label || "Klass", ms.class_labels[c],
-        ms.has_values === false ? ms.colors[c] : undefined);
-      else if (ms.has_values === false) h += vgrD3.tooltipRow(ms.class_row_label || "Klass", "Uppgift saknas", spec.na_color);
+      // Klassraden (gruppen på en grupperad karta); tooltip_class = FALSE tar bort den
+      if (TT.class) {
+        if (c != null) h += vgrD3.tooltipRow(ms.class_row_label || "Klass", ms.class_labels[c],
+          ms.has_values === false ? ms.colors[c] : undefined);
+        else if (ms.has_values === false) h += vgrD3.tooltipRow(ms.class_row_label || "Klass", "Uppgift saknas", spec.na_color);
+      }
       if (spec.bubbles && spec.bubbles.in_tooltip) {
         var bv = (spec.bubbles.values[state.year] || {})[id];
         if (bv != null) h += vgrD3.tooltipRow(spec.bubbles.label, fmtT(bv, spec.bubbles.decimals), spec.bubbles.color);

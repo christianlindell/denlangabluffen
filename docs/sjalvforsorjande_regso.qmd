@@ -1,0 +1,229 @@
+---
+title: "Allt färre stadsdelar med låg andel självförsörjande"
+lang: sv
+format:
+  html:
+    css: faktabox.css
+execute:
+  echo: false
+  warning: false
+  message: false
+  # Resultatet sparas i _freeze, så att boken kan byggas om utan kartdatan så länge
+  # kapitlet inte ändras
+  freeze: auto
+---
+
+```{r}
+#| label: las-in-data
+# Kapitlet bygger på inlägget "Allt färre stadsdelar med låg andel självförsörjande" (2026-11-18)
+# i bloggen R_claude/statistik-och-strunt (posts/sjalvforsorjande_regso). Geometrin (karta/) och
+# statistiken (data/) hämtas från inläggets mapp, så att boken och bloggen visar samma data. De
+# kommer ursprungligen från projektet "regso 2020" (forbered_kartor.R och uppdatera_data.R,
+# SCB TAB6766).
+library(sf)
+library(dplyr)
+library(funcVGRD3)
+# Popupen utan klassrad (tooltip_class) och förklaringens etiketter med decimaler kräver 0.14.0
+stopifnot(packageVersion("funcVGRD3") >= "0.14.0")
+
+# Inläggets mapp söks uppåt i katalogträdet från bokens mapp
+inlagg_mapp <- NULL
+for (upp in 0:5) {
+  kandidat <- file.path(do.call(file.path, as.list(c(".", rep("..", upp)))),
+                        "statistik-och-strunt", "posts", "sjalvforsorjande_regso")
+  if (dir.exists(kandidat)) { inlagg_mapp <- kandidat; break }
+}
+if (is.null(inlagg_mapp)) stop("Hittar inte statistik-och-strunt/posts/sjalvforsorjande_regso ovanför ", getwd())
+
+regso_geo  <- st_read(file.path(inlagg_mapp, "karta", "regso2020_forenklad.gpkg"), quiet = TRUE)
+kommun_geo <- st_read(file.path(inlagg_mapp, "karta", "kommuner_fran_regso2020.gpkg"), quiet = TRUE)
+statistik  <- readRDS(file.path(inlagg_mapp, "data", "sjalvfors_regso2020.rds"))
+stopifnot(setequal(regso_geo$regsokod, statistik$regsokod))
+
+# Studentområde: mer än 25 % studerande eller värnpliktiga bland invånarna 20–64 år minst ett år
+statistik <- statistik |>
+  group_by(regsokod) |>
+  mutate(student = any(stud_andel > 25, na.rm = TRUE)) |>
+  ungroup()
+
+# Kommunen står i namnet, eftersom flera områden heter likadant
+regso_ar <- regso_geo |>
+  left_join(st_drop_geometry(kommun_geo), by = "kommunkod") |>
+  mutate(namn = paste0(regsonamn, " (", kommunnamn, ")")) |>
+  inner_join(statistik, by = "regsokod", relationship = "one-to-many") |>
+  mutate(etikett = if_else(is.na(sjalvf_andel), NA_character_, paste0(round(sjalvf_andel), " %")),
+         studentomrade = if_else(student, "ja", "nej"))
+
+forsta_ar <- min(regso_ar$ar)
+sista_ar  <- max(regso_ar$ar)
+```
+
+I debatten beskrivs utanförskapsområdena ofta som platser där allt går åt fel håll. Statistiken pekar åt ett annat håll. Mellan `r forsta_ar` och `r sista_ar` ökade andelen självförsörjande i nästan alla Sveriges stadsdelar, och allra mest där andelen var lägst från början. Antalet stadsdelar där mindre än hälften av invånarna i arbetsför ålder är självförsörjande har mer än halverats.
+
+Kartan längre ned visar andelen självförsörjande bland invånarna 20–64 år i vart och ett av landets drygt 3 300 regionala statistikområden (RegSO). Det är samma indelning som i kartan över sysselsättningen i [kapitel 7](karta_sysselsattning_regso.qmd), och i städerna motsvarar områdena ungefär stadsdelar. Statistiken kommer från SCB.
+
+Några saker är värda att lägga märke till:
+
+- *Ökningen är nästan total.* Av de 3 362 områden som har uppgifter för både 2013 och 2023 har andelen självförsörjande ökat i 3 146. I hälften av områdena har andelen ökat med mer än 4,7 procentenheter. I riket som helhet steg andelen från knappt 70 till knappt 75 procent.
+
+- *Det är de svagaste områdena som har ökat mest.* Bland områdena där mindre än hälften var självförsörjande 2013 var den typiska ökningen 10 procentenheter. Bergsjön södra i Göteborg gick från 30 till 56 procent, Koppargården-Kopparhögarna i Landskrona från 28 till 52 procent och Hyllievång norr i Malmö från 30 till 54 procent.
+
+- *De riktigt låga andelarna finns i dag främst i studentområden.* Heltidsstuderande med låga inkomster räknas varken som självförsörjande eller som ej självförsörjande, men de ingår i befolkningen. Därför får områden med många studenter låga andelar, utan att det säger något om utanförskap. Kartans fem lägsta områden 2023 ligger i Lund, Uppsala och Luleå. Bortsett från studentområdena[^1] minskade antalet områden där mindre än hälften var självförsörjande från 141 till 51. Antalet invånare 20–64 år som bor i sådana områden sjönk från drygt 300 000 till knappt 120 000.
+
+- *Pandemin syns som ett hack.* År 2020 gick andelen ned i många områden, men redan 2022 var den högre än före pandemin.
+
+[^1]: Ett område räknas här som studentområde om mer än 25 procent av invånarna 20–64 år var studerande eller värnpliktiga något av åren 2013–2023. Det gäller 49 områden. Gränsen är en annan än i kapitel 7, eftersom studerande med låga inkomster påverkar måttet självförsörjning på ett annat sätt än sysselsättningsgraden.
+
+Det betyder inte att problemen är lösta. I många områden är fortfarande bara drygt hälften av invånarna i arbetsför ålder självförsörjande. Men riktningen är tydlig, och den går åt rätt håll. Den som bara lyssnar på debatten kan lätt få för sig att det är tvärtom.
+
+Som vi skriver i boken är "självförsörjning" ett trubbigt mått. Det fångar inte hushållens ekonomi, och gränsen mellan självförsörjande och ej självförsörjande är satt mer eller mindre godtyckligt (se avsnittet om hur SCB definierar självförsörjning nedan). Men det är ett mått som ofta används i debatten, och då är det rimligt att se vad det faktiskt visar.
+
+## Kartan
+
+Kartan öppnar på `r forsta_ar`. Ju mörkare blå färg, desto högre andel självförsörjande. Hur du byter år, ser förändringen mellan två år och räknar bort studentområdena står i faktarutan under kartan.
+
+<!-- Kartan breder bara ut sig åt höger, som RegSO-kartan i kapitel 7. Med column-page fälls
+     bokens innehållsförteckning till vänster ihop, eftersom kartan annars skulle täcka den. -->
+::: {#sjalvf-karta .column-body-outset-right}
+```{r}
+#| label: karta
+func_d3_karta(
+  regso_ar,
+  df_value                = "sjalvf_andel",
+  geom_col                = "geom",
+  time_column             = "ar",
+  time_default            = forsta_ar,   # kartan öppnar på första året; ▶ spelar upp framåt
+  geom_id_column          = "regsokod",
+  geom_simplify_tolerance = NULL,   # underlaget är redan förenklat
+  tooltip_name_column     = "namn",
+  tooltip_columns         = c("Antal självförsörjande"      = "sjalvf_antal",
+                              "Befolkning 20–64 år"         = "bef2064",
+                              "Ej självförsörjande (%)"     = "ej_sjalvf_andel",
+                              "Studerande/värnpliktiga (%)" = "stud_andel",
+                              "Utrikesfödda (%)"            = "utrikes_andel",
+                              "Studentområde"               = "studentomrade"),
+  tooltip_rank            = FALSE,
+  tooltip_class           = FALSE,
+  tooltip_unit            = " %",
+  # Förändringen mellan två andelar är i procentenheter, inte procent
+  tooltip_unit_change     = " procentenheter",
+  legend_title_change     = "Förändring (procentenheter)",
+  breaks_custom_change    = c(-5, -2, 0, 2, 5, 10),
+  color_negative          = "#b2182b",
+  tooltip_decimals        = 1,
+  breaks_method           = "custom",
+  breaks_custom           = seq(40, 80, 5),
+  color                   = "#0d366b",
+  color_low               = "#cde2fb",
+  data_color_line         = "white",
+  overlay                 = kommun_geo,
+  overlay_color           = "#000000",
+  overlay_line_size       = 0.4,
+  data_label_show         = TRUE,
+  data_label_column       = "etikett",
+  data_label_zoom         = TRUE,
+  data_label_zoom_overlap = 0.1,
+  data_label_box          = FALSE,
+  data_label_text_color   = "auto",
+  data_label_text_size    = 2.9,
+  legend_position         = "left",
+  legend_title            = "Andel självförsörjande (%)",
+  animation_play_interval = 1200,
+  animation_duration      = 0,
+  width                   = 1100,
+  height                  = 760,
+  # Draghandtag i kartans nedre högra hörn, som på kartan i kapitel 7
+  interactive_resize      = TRUE,
+  summary_text            = "Områdena som visas, {period}: {bef} invånare 20–64 år · {andel} självförsörjande · {antal}",
+  summary_sum             = c(bef = "bef2064"),
+  summary_ratio           = list(andel = c("sjalvf_antal", "bef2064")),
+  interactive_exclude     = c("Exkludera studentområden" = "student")
+)
+```
+:::
+
+Källa: SCB, självförsörjning per RegSO (TAB6766), RegSO-indelningen från 2020.
+
+::: faktabox
+### Så använder du kartan {.unnumbered .unlisted}
+
+- **Byt år** genom att dra i tidsreglaget, eller tryck på ▶︎ för att spela upp utvecklingen år för år från `r forsta_ar`.
+- **Se förändringen** mellan två år genom att välja *Förändring*. Med reglagets två handtag väljer du startår och slutår.
+- **Zooma** med scrollhjulet, dra för att flytta kartan och klicka på ett område för att zooma in på det. *Återställ* visar hela landet igen. När du har zoomat in tillräckligt skrivs andelen ut i varje område.
+- **Se detaljer** genom att hålla muspekaren över ett område: andel självförsörjande, antal självförsörjande, befolkning 20–64 år och andelen ej självförsörjande, studerande och utrikesfödda.
+- **På mobil och pekplatta** trycker du på ett område för att se detaljerna och trycker en gång till för att zooma in på det. Nyp för att zooma och dra med ett finger för att flytta kartan.
+- **Sök** efter ett område i sökrutan. Namnet följs av kommunen, t.ex. "Bergsjön södra (Göteborg)". När du väljer ett namn i listan zoomar kartan in på området. Krysset i rutan tömmer den.
+- **Välj bort** grupper av områden genom att klicka på dem i teckenförklaringen.
+- **Exkludera studentområden** genom att kryssa i rutan i raden under kartan. Som studentområden räknas här områden där över 25 procent av de boende 20–64 år var studerande eller värnpliktiga något av åren 2013–2023. Studentområdena tonas ned i kartan och räknas inte med i raden under den. Kryssa ur rutan för att visa dem igen.
+- **Ändra kartans storlek** genom att dra i handtaget i kartans nedre högra hörn. Kartan behåller sin skala, så en mindre ruta visar ett mindre utsnitt. Dubbelklicka på handtaget eller tryck på *Återställ* för att få tillbaka den ursprungliga storleken.
+
+Raden under kartan summerar de områden som syns helt i kartan och inte är bortvalda i teckenförklaringen eller med kryssrutan för studentområden: antalet invånare 20–64 år och andelen självförsörjande bland dem. Zoomar du in på en stad visar raden alltså stadens siffror.
+:::
+
+## Hela fördelningen har flyttats åt höger
+
+Diagrammet nedan visar hur många områden som har en viss andel självförsörjande, i klasser om fem procentenheter, 2013 och 2023. Hela fördelningen har förskjutits uppåt. År 2013 var 70–74 procent den vanligaste klassen, och 2023 hade 75–79 och 80–84 procent tagit över. Antalet områden där minst 85 procent är självförsörjande ökade från 50 till 364. Samtidigt har antalet områden minskat i varje klass under 75 procent. Det är alltså inte bara genomsnittet som har stigit, utan förbättringen syns i hela fördelningen.
+
+```{r}
+#| label: histogram-data
+# Antal RegSO per femprocentsklass av andelen självförsörjande, första och sista året. Klassen
+# "70–74" är 70 till under 75 procent. Alla klasser mellan den lägsta och högsta tas med, även
+# tomma, så att x-axeln blir obruten. Områden utan uppgift (Barkarbystaden 2013) räknas inte.
+hist_ar <- c(min(statistik$ar), max(statistik$ar))
+hist_df <- statistik |>
+  filter(ar %in% hist_ar, !is.na(sjalvf_andel)) |>
+  mutate(klass = floor(sjalvf_andel / 5) * 5)
+klasser <- seq(min(hist_df$klass), max(hist_df$klass), 5)
+hist_df <- hist_df |>
+  count(ar, klass) |>
+  tidyr::complete(ar = hist_ar, klass = klasser, fill = list(n = 0)) |>
+  mutate(klass_namn = factor(paste0(klass, "–", klass + 4), levels = paste0(klasser, "–", klasser + 4)),
+         ar = factor(ar))
+stopifnot(sum(hist_df$n) == sum(!is.na(statistik$sjalvf_andel[statistik$ar %in% hist_ar])))
+```
+
+```{r}
+#| label: histogram
+func_d3_stapeldiagram(
+  hist_df, x_value = "klass_namn", y_value = "n", group = "ar",
+  colors = setNames(c("#7aa6d6", "#0d366b"), levels(hist_df$ar)),
+  bar_type = "grouped",
+  subtitle = paste0("Antal RegSO efter andel självförsörjande 20–64 år, ",
+                    hist_ar[1], " och ", hist_ar[2]),
+  x_axis_title = "Andel självförsörjande (%)", y_axis_title = "Antal områden",
+  legend_position = "top", legend_title = "",
+  show_major_grid = "y",
+  tooltip_decimals = 0,
+  interactive_sort = FALSE,   # klasserna ska stå i ordning
+  interactive_bar_type_toggle = FALSE,   # staplade staplar säger inget i ett histogram
+  caption = "Källa: SCB (TAB6766).",
+  width = 800, height = 450
+)
+```
+
+## Hur SCB definierar självförsörjning
+
+SCB redovisar statistiken på regeringens uppdrag och använder det mått som regeringen tog fram till 2024 års ekonomiska vårproposition. Måttet bygger på en inkomstgräns:
+
+-   *Självförsörjande* är den som under ett kalenderår har en självförsörjningsgrundande inkomst på minst tre inkomstbasbelopp.
+
+-   *Ej självförsörjande* är den som har en lägre inkomst än så.
+
+-   *Heltidsstuderande och värnpliktiga* som ligger under gränsen räknas inte som ej självförsörjande utan bildar en egen grupp. Heltidsstuderande är de som läst på heltid med studiemedel i minst 20 veckor under året.
+
+Inkomstbasbeloppet räknas fram av Pensionsmyndigheten och följer löneutvecklingen. År 2026 är det 83 400 kronor. Tre inkomstbasbelopp motsvarar alltså 250 200 kronor om året, eller 20 850 kronor i månaden före skatt. Under kartans år låg gränsen lägre, från 169 800 kronor 2013 till 222 900 kronor 2023. Enligt Regeringskansliet motsvarar gränsen ungefär en inkomst där de flesta har arbetat minst halvtid i genomsnitt under året. Gränsen är satt högre än nivån för ekonomiskt bistånd för en ensamstående, men något lägre än vad Konsumentverket anser att en person behöver för skäliga levnadskostnader.
+
+Det är inte bara lön som räknas. Den självförsörjningsgrundande inkomsten består av:
+
+-   lön, inklusive anställningsstöd och lön från övriga nordiska länder
+-   inkomst av näringsverksamhet
+-   kapitalinkomster, inklusive realiserade kapitalvinster
+-   inkomstgrundad pension, det vill säga allmän pension utom garantipension, tjänstepension och privat pension
+-   sjukpenning, rehabiliteringsersättning, inkomstbaserad föräldrapenning, vab och närståendepenning, men bara för den som också har haft lön eller näringsinkomst under året
+-   ersättningar vid militär utbildning och tjänstgöring.
+
+Arbetslöshetsersättning, aktivitetsstöd, sjuk- och aktivitetsersättning och ekonomiskt bistånd räknas däremot inte in.
+
+Svenskt Näringsliv och Entreprenörskapsforum har i stället använt en gräns på fyra *prisbasbelopp*. Siffror om "självförsörjning" från olika källor går därför inte alltid att jämföra.
+
+Källor: [SCB, Kvalitetsdeklaration – Statistik om självförsörjning 2013–2024](https://www.scb.se/contentassets/f150756e08484fcea5bc4ba3c7b7ff74/he0000_kd_2013-2024_260225.pdf) och [Skatteverket, Belopp och procent – inkomstår 2026](https://www.skatteverket.se/privat/skatter/beloppochprocent/2026).

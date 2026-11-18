@@ -76,7 +76,7 @@ bef_kommun <- bef_kommun |>
          across(c(pct_faktisk, pct_exkl), ~ formatC(.x, format = "f", digits = 1, decimal.mark = ","),
                 .names = "txt_{.col}"))
 
-# Samma kommunkarta som overlay på RegSO-kartan i kapitlet före
+# Samma kommunkarta som overlay på RegSO-kartan i kapitel 7
 kommun_bef <- left_join(kommun_geo, bef_kommun, by = "kommunkod")
 
 # Osynlig (vit) bakgrund, mycket bredare än Sverige och lika hög. func_d3_karta flyttar annars
@@ -201,7 +201,7 @@ I hela landet ökade befolkningen med `r antal_txt(sum(bef_kommun$abs_faktisk))`
 </script>
 ```
 
-<!-- Kartan breder bara ut sig åt höger, som RegSO-kartan i kapitlet före. -->
+<!-- Kartan breder bara ut sig åt höger, som RegSO-kartan i kapitel 7. -->
 ::::: {.kommunkarta .column-body-outset-right}
 ::: kartval
 ```{=html}
