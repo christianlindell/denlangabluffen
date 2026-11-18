@@ -60,7 +60,7 @@ sista_ar  <- max(regso_ar$ar)
 
 I debatten beskrivs utanförskapsområdena ofta som platser där allt går åt fel håll. Statistiken pekar åt ett annat håll. Mellan `r forsta_ar` och `r sista_ar` ökade andelen självförsörjande i nästan alla Sveriges stadsdelar, och allra mest där andelen var lägst från början. Antalet stadsdelar där mindre än hälften av invånarna i arbetsför ålder är självförsörjande har mer än halverats.
 
-Kartan längre ned visar andelen självförsörjande bland invånarna 20–64 år i vart och ett av landets drygt 3 300 regionala statistikområden (RegSO). Det är samma indelning som i kartan över sysselsättningen i [kapitel 7](karta_sysselsattning_regso.qmd), och i städerna motsvarar områdena ungefär stadsdelar. Statistiken kommer från SCB.
+Kartan längre ned visar andelen självförsörjande bland invånarna 20–64 år i vart och ett av landets drygt 3 300 regionala statistikområden (RegSO). Det är ungefär samma indelning som i kartan över sysselsättningen i [kapitel 7](karta_sysselsattning_regso.qmd), med undantag av att SCB gjorde en smärre revidering av områdesindelningen 2025. I städerna motsvarar områdena ungefär stadsdelar. Statistiken kommer från SCB.
 
 Några saker är värda att lägga märke till:
 
