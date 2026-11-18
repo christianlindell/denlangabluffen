@@ -10,3 +10,5 @@ _book/
 
 /.quarto/
 **/*.quarto_ipynb
+.posit/assistant
+/renv/
